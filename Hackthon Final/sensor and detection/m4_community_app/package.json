@@ -1,0 +1,22 @@
+{
+  "name": "m4-community-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ADRS M4 — Community Map, Live Incidents & Driver HUD",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.0"
+  }
+}

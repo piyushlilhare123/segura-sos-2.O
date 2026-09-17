@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segura AI — Nexus Command</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated Radar Grid Background -->
+    <div class="bg-radar">
+        <div class="sweep"></div>
+        <div class="grid-lines"></div>
+    </div>
+    
+    <!-- Particles overlay -->
+    <div id="particles-js"></div>
+
+    <div class="dashboard-wrapper">
+        
+        <!-- Top Navigation -->
+        <header class="top-nav glass-panel">
+            <div class="logo">
+                <span class="neon-icon">⬡</span>
+                <h1>SURAKSHA <span>AI.CORE</span></h1>
+            </div>
+            <div class="nav-center">
+                <div class="nav-tab active">OVERVIEW</div>
+                <div class="nav-tab">CAMERAS</div>
+                <div class="nav-tab">ANALYTICS</div>
+                <div class="nav-tab">SYSTEM</div>
+            </div>
+            <div class="sys-status">
+                <span>SYSTEM ONLINE</span>
+                <div class="pulse-dot green"></div>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            
+            <!-- Left Column: Stats & Controls -->
+            <div class="col-left">
+                <!-- Stats Dashboard -->
+                <section class="glass-panel stat-panel">
+                    <h2><span class="crosshair-icon">⌖</span> LIVE METRICS</h2>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">ACTIVE SENSORS</div>
+                            <div class="stat-value neon-cyan" data-target="2048">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">EVENTS TODAY</div>
+                            <div class="stat-value neon-yellow" data-target="864">0</div>
+                        </div>
+                        <div class="stat-card full-width danger-bg">
+                            <div class="stat-label text-red">CRITICAL ALERTS</div>
+                            <div class="stat-value neon-red heartbeat">3</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Control Panel -->
+                <section class="glass-panel control-panel">
+                    <h2><span class="crosshair-icon">⚡</span> SYSTEM CONTROLS</h2>
+                    <div class="control-list">
+                        <div class="control-item">
+                            <span>Auto-Dispatch EMS</span>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round cyan-glow"></span>
+                            </label>
+                        </div>
+                        <div class="control-item">
+                            <span>Global Area Scan</span>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round cyan-glow"></span>
+                            </label>
+                        </div>
+                        <div class="control-item">
+                            <span>Neural Threat Model</span>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round cyan-glow"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn-action danger-glow uppercase-btn" id="lockdown-btn">INITIATE LOCKDOWN</button>
+                </section>
+            </div>
+
+            <!-- Center Column: Video Monitoring -->
+            <div class="col-center">
+                <section class="glass-panel video-panel">
+                    <div class="video-header">
+                        <h2><span class="crosshair-icon">◎</span> HIGH-WAY CAM-04 (MUMBAI-PUNE)</h2>
+                        <div class="live-badge">RAISE ALERT</div>
+                    </div>
+                    
+                    <div class="video-container">
+                        <!-- Simulated Video Background -->
+                        <div class="video-feed"></div>
+                        
+                        <!-- HUD Overlays -->
+                        <div class="hud-top-left">LAT. 18.7512 | LNG. 73.4055</div>
+                        <div class="hud-top-right">REC 🔴</div>
+                        <div class="scanline"></div>
+                        
+                        <!-- Target Lock UI -->
+                        <div class="target-box animated-box">
+                            <span class="target-label text-red">CRASH DETECTED - 94% CONFIDENCE</span>
+                        </div>
+                        <div class="target-box warning-box">
+                            <span class="target-label text-yellow">SPEEDING - 130KM/H</span>
+                        </div>
+                    </div>
+                    
+                    <div class="video-footer">
+                        <div class="metric"><span>FPS</span> <strong class="neon-cyan">60</strong></div>
+                        <div class="metric"><span>LATENCY</span> <strong class="neon-cyan">12ms</strong></div>
+                        <div class="metric"><span>AI MODEL</span> <strong class="neon-cyan">V4.X OMEGA</strong></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Alert Feed -->
+            <div class="col-right">
+                <section class="glass-panel alert-section">
+                    <h2><span class="crosshair-icon">⚠</span> LIVE INCIDENTS</h2>
+                    <div class="alert-feed" id="alert-feed-container">
+                        <!-- JS Will Populate This -->
+                    </div>
+                </section>
+                
+                <section class="glass-panel radar-min-panel">
+                    <h2><span class="crosshair-icon">◔</span> THREAT SEVERITY</h2>
+                    <div class="chart-dummy">
+                        <div class="bar h-60"></div>
+                        <div class="bar h-40"></div>
+                        <div class="bar h-90 critical"></div>
+                        <div class="bar h-20"></div>
+                        <div class="bar h-50"></div>
+                        <div class="bar h-30"></div>
+                        <div class="bar h-80 warning"></div>
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

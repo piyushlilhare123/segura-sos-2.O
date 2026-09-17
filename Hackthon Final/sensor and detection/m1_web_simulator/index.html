@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Segura SOS — M1 Sensor Simulator</title>
+    <meta name="description" content="Segura SOS Module 1 - Live sensor simulator and crash event emitter">
+
+    <!-- ── PWA / Mobile-app-like experience ──────────────────── -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Segura SOS">
+    <meta name="theme-color" content="#080c14">
+
+    <!-- ── Sensor Permissions Policy (served via HTTPS server) ── -->
+    <!-- Permissions-Policy is set in the HTTP headers by https_server.py -->
+
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Caacupe+One&family=Outfit:wght@100..900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ── iOS / Mobile Sensor Permission Overlay ─────────────── -->
+    <!-- Shown only on iOS or when served over non-secure origin  -->
+    <div id="sensor-overlay" class="sensor-overlay hidden">
+        <div class="overlay-card">
+            <div class="overlay-icon">📱</div>
+            <h2>Enable Phone Sensors</h2>
+            <p>Segura SOS needs access to your phone's <strong>accelerometer</strong>, <strong>gyroscope</strong>, and <strong>GPS</strong> to detect crash events in real time.</p>
+            <div class="overlay-sensor-list">
+                <div class="overlay-sensor-item">
+                    <span class="sensor-icon">📍</span>
+                    <span>GPS location for crash coordinates</span>
+                </div>
+                <div class="overlay-sensor-item">
+                    <span class="sensor-icon">📳</span>
+                    <span>Accelerometer for g-force impact</span>
+                </div>
+                <div class="overlay-sensor-item">
+                    <span class="sensor-icon">🔄</span>
+                    <span>Gyroscope for orientation / rollover</span>
+                </div>
+                </div>
+            <button id="btn-overlay-enable" class="btn-overlay-enable">
+                Tap to Enable Sensors
+            </button>
+            <p class="overlay-hint">Your data stays on-device and is only sent to the local SOS backend.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚨</div>
+                <div>
+                    <h1 class="brand-title">Suraksha <span>SOS</span></h1>
+                    <p class="logo-sub">M1 · Sensor Telemetry Cockpit</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+                    🌙 Dark Theme
+                </button>
+                <div id="connection-status" class="status-offline">Offline</div>
+            </div>
+        </header>
+
+        <!-- ── HTTPS / Access Banner ───────────────────────────── -->
+        <div id="https-banner" class="https-banner hidden">
+            <!-- Filled by JS with LAN URL + protocol info -->
+        </div>
+
+        <!-- ── DEMO BANNER ─────────────────────────────────────── -->
+        <div class="demo-banner">
+            <div class="demo-banner-text">
+                <strong>🎯 Quick Test Bench</strong>
+                <span>Click the button to instantly fire a severe crash event through the full pipeline → M2 → M3 → M4 map</span>
+            </div>
+            <button id="btn-demo" class="btn demo">🚨 Fire Demo SOS</button>
+        </div>
+
+        <main>
+            <!-- Panel 1: Live SENSOR PANEL -->
+            <section class="panel">
+                <h2>1. Live Sensor Panel</h2>
+
+                <!-- Permission Status Badges -->
+                <div class="perm-status-row" id="perm-status-row">
+                    <div class="perm-badge" id="perm-gps">
+                        <span class="perm-dot pending"></span>
+                        <span class="perm-label">GPS</span>
+                        <span class="perm-state" id="perm-gps-state">—</span>
+                    </div>
+                    <div class="perm-badge" id="perm-motion">
+                        <span class="perm-dot pending"></span>
+                        <span class="perm-label">Accel</span>
+                        <span class="perm-state" id="perm-motion-state">—</span>
+                    </div>
+                    <div class="perm-badge" id="perm-orient">
+                        <span class="perm-dot pending"></span>
+                        <span class="perm-label">Gyro</span>
+                        <span class="perm-state" id="perm-orient-state">—</span>
+                    </div>
+                    <div class="perm-badge" id="perm-source">
+                        <span class="perm-dot"></span>
+                        <span class="perm-label">Source</span>
+                        <span class="perm-state" id="perm-source-state">SIM</span>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <label>G-Force</label>
+                        <div class="value" id="val-gforce">1.0 <span>g</span></div>
+                        <div class="card-sub" id="sub-gforce">simulated</div>
+                    </div>
+                    <div class="card">
+                        <label>Speed</label>
+                        <div class="value" id="val-speed">0 <span>km/h</span></div>
+                        <div class="card-sub" id="sub-speed">simulated</div>
+                    </div>
+                    <div class="card">
+                        <label>Latitude</label>
+                        <div class="value small" id="val-lat">--</div>
+                        <div class="card-sub" id="sub-lat">awaiting GPS</div>
+                    </div>
+                    <div class="card">
+                        <label>Longitude</label>
+                        <div class="value small" id="val-lng">--</div>
+                        <div class="card-sub" id="sub-accuracy">accuracy --</div>
+                    </div>
+                </div>
+
+                <!-- Sensor action buttons -->
+                <div class="sensor-btn-row">
+                    <button id="btn-start-sensors" class="btn secondary">📡 Enable Real Sensors</button>
+                    <button id="btn-stop-sensors" class="btn secondary stop hidden">⏹ Stop Sensors</button>
+                </div>
+
+                <!-- Real-time sensor bars -->
+                <div class="sensor-bars" id="sensor-bars" style="display:none">
+                    <div class="sbar-row">
+                        <span class="sbar-label">X</span>
+                        <div class="sbar-track"><div class="sbar-fill" id="bar-x"></div></div>
+                        <span class="sbar-val" id="sval-x">0.0</span>
+                    </div>
+                    <div class="sbar-row">
+                        <span class="sbar-label">Y</span>
+                        <div class="sbar-track"><div class="sbar-fill" id="bar-y"></div></div>
+                        <span class="sbar-val" id="sval-y">0.0</span>
+                    </div>
+                    <div class="sbar-row">
+                        <span class="sbar-label">Z</span>
+                        <div class="sbar-track"><div class="sbar-fill blue" id="bar-z"></div></div>
+                        <span class="sbar-val" id="sval-z">0.0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DevTools Guide Panel -->
+            <section class="panel devtools-panel">
+                <h2>🔌 Chrome DevTools Sensor Spoof — Desktop / No Phone Needed</h2>
+                <div class="devtools-steps">
+                    <div class="dt-step">
+                        <div class="dt-num">1</div>
+                        <div class="dt-body">
+                            <strong>Open DevTools</strong>
+                            <span>Press <kbd>F12</kbd> in Chrome</span>
+                        </div>
+                    </div>
+                    <div class="dt-step">
+                        <div class="dt-num">2</div>
+                        <div class="dt-body">
+                            <strong>Open Sensors tab</strong>
+                            <span>Click <kbd>⋮</kbd> → <kbd>More tools</kbd> → <kbd>Sensors</kbd></span>
+                        </div>
+                    </div>
+                    <div class="dt-step">
+                        <div class="dt-num">3</div>
+                        <div class="dt-body">
+                            <strong>Spoof GPS location</strong>
+                            <span>Location → <em>Other…</em> → enter <strong>26.2183, 78.1828</strong> (Gwalior)</span>
+                        </div>
+                    </div>
+                    <div class="dt-step">
+                        <div class="dt-num">4</div>
+                        <div class="dt-body">
+                            <strong>Click "Enable Real Sensors" above</strong>
+                            <span>Lat/Lng cards will update from DevTools immediately</span>
+                        </div>
+                    </div>
+                    <div class="dt-step highlight-step">
+                        <div class="dt-num">5</div>
+                        <div class="dt-body">
+                            <strong>Simulate a crash via Orientation</strong>
+                            <span>DevTools → <em>Orientation</em> → set <strong>β (beta)</strong> to <strong>90</strong> then drag it quickly to <strong>−90</strong></span>
+                            <span class="dt-hint">⚡ Rapid drag = high angular velocity = crash detected automatically!</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dt-tip">
+                    💡 <strong>Tip:</strong> Dragging the beta/gamma sliders <em>slowly</em> simulates normal driving. Dragging them <em>fast</em> simulates a crash impact.
+                </div>
+            </section>
+
+            <!-- Panel 2: CRASH SIMULATOR PANEL -->
+            <section class="panel">
+                <h2>2. Manual Crash Simulator</h2>
+
+                <div class="control-group">
+                    <label>Simulated Speed (km/h): <span id="lbl-speed">40</span></label>
+                    <input type="range" id="sim-speed" min="0" max="150" value="40">
+                </div>
+
+                <div class="control-group">
+                    <label>Simulated G-Force (g): <span id="lbl-g">1.0</span></label>
+                    <input type="range" id="sim-g" min="0" max="5" step="0.1" value="1.0">
+                </div>
+
+                <div class="control-group">
+                    <label>Weather Condition</label>
+                    <select id="sim-weather">
+                        <option value="clear">Clear</option>
+                        <option value="rain">Rain</option>
+                        <option value="fog">Fog</option>
+                    </select>
+                </div>
+
+                <div class="actions">
+                    <button id="btn-normal" class="btn success">Normal Drive</button>
+                    <button id="btn-hard-brake" class="btn warning">Hard Brake</button>
+                    <button id="btn-crash" class="btn danger">Simulate Crash</button>
+                </div>
+            </section>
+
+            <!-- Panel 3: M2 Analysis Result -->
+            <section class="panel" id="analysis-panel" style="display:none;border-left:3px solid #ff3366">
+                <h2>M2 Analysis Result</h2>
+            </section>
+
+            <!-- Panel 4: LIVE READOUT -->
+            <section class="panel">
+                <h2>3. Live Event Readout</h2>
+                <div class="log-container" id="log-container">
+                    <!-- Events will show up here -->
+                </div>
+            </section>
+        </main>
+    </div>
+        <img id="accident-photo-preview" class="accident-photo-img" alt="Accident scene capture">
+        <div class="photo-card-status" id="photo-card-status">Sent with SOS</div>
+    </div>
+
+    <!-- ── SOS Countdown Modal (10-second cancel window) ─────── -->
+    <div id="sos-countdown-modal" class="sos-modal hidden">
+        <div class="sos-modal-card">
+            <div class="sos-modal-icon">🚨</div>
+            <h2 class="sos-modal-title">Crash Detected!</h2>
+            <p class="sos-modal-sub">SOS will be sent automatically in</p>
+
+            <div class="sos-ring-wrap">
+                <svg class="sos-ring-svg" viewBox="0 0 120 120">
+                    <circle class="sos-ring-track" cx="60" cy="60" r="52"/>
+                    <circle class="sos-ring-fill" id="sos-ring-fill" cx="60" cy="60" r="52"/>
+                </svg>
+                <div class="sos-ring-count" id="sos-countdown-num">10</div>
+            </div>
+
+            <div class="sos-modal-info">
+                <div class="sos-info-row">
+                    <span class="sos-info-label">G-Force</span>
+                    <span class="sos-info-val" id="sos-info-g">—</span>
+                </div>
+                <div class="sos-info-row">
+                    <span class="sos-info-label">Speed</span>
+                    <span class="sos-info-val" id="sos-info-speed">—</span>
+                </div>
+                <div class="sos-info-row">
+                    <span class="sos-info-label">Location</span>
+                    <span class="sos-info-val" id="sos-info-loc">—</span>
+                </div>
+            </div>
+
+            <button id="sos-cancel-btn" class="sos-cancel-btn">
+                ✕ Cancel — I'm OK
+            </button>
+            <p class="sos-modal-hint">Not an emergency? Tap cancel within 10 seconds.</p>
+        </div>
+    </div>
+
+    <!-- On-screen debug log (visible on mobile without DevTools) -->
+    <div id="debug-log" style="
+        position:fixed; bottom:0; left:0; right:0;
+        max-height:120px; overflow-y:auto;
+        background:rgba(0,0,0,.85); font-size:10px;
+        font-family:monospace; padding:4px 8px;
+        z-index:9999; pointer-events:none;
+    "></div>
+
+    <script src="app.js?v=10"></script>
+</body>
+</html>

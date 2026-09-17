@@ -1,0 +1,32 @@
+services:
+  # ── M2: AI Engine (Python / FastAPI) ──────────────────────────────────
+  - type: web
+    name: segura-m2-ai-engine
+    runtime: python
+    rootDir: Hackthon Final/sensor and detection/m2_ai_engine
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
+  # ── M3: SOS Server (Node.js / Express + WebSocket) ───────────────────
+  - type: web
+    name: segura-m3-sos-server
+    runtime: node
+    rootDir: Hackthon Final/sos-server
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: "18.20.0"
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: EMERGENCY_SERVICES_NUMBER
+        sync: false

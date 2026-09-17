@@ -1,0 +1,2002 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segura SOS — IoT Toy Car Implementation Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a2e;
+            --border: #2a2a3e;
+            --text: #e0e0e8;
+            --text-dim: #8888a0;
+            --accent: #6c5ce7;
+            --accent2: #00cec9;
+            --red: #ff3366;
+            --orange: #ff9800;
+            --green: #00e676;
+            --yellow: #ffd600;
+            --blue: #448aff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        /* Print styles */
+        @media print {
+            body { background: #fff; color: #111; font-size: 11px; line-height: 1.5; }
+            .cover-page { background: #1a1a2e !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; margin: 10px 0; }
+            .page-break { page-break-before: always; }
+            .no-print { display: none !important; }
+            .wiring-diagram { background: #f5f5f5 !important; color: #111 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .pin-table th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .component-card { border: 1px solid #ccc; }
+            .alert { border-left: 4px solid; }
+            pre, code { font-size: 9px !important; }
+            h1 { font-size: 22px; }
+            h2 { font-size: 16px; }
+            h3 { font-size: 13px; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a2a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(108,92,231,0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(255,51,102,0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-20px, -20px); }
+        }
+
+        .cover-badge {
+            display: inline-block;
+            padding: 8px 24px;
+            background: rgba(108,92,231,0.2);
+            border: 1px solid rgba(108,92,231,0.4);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-title {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #6c5ce7 50%, #ff3366 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-subtitle {
+            font-size: 22px;
+            font-weight: 300;
+            color: #aaa;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-emoji {
+            font-size: 80px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-meta {
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+            color: var(--text-dim);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cover-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Page sections */
+        .page {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 24px 0;
+            border: 1px solid var(--border);
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Headings */
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 .emoji { font-size: 36px; }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            color: var(--accent2);
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #ff3366);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        p {
+            margin: 10px 0;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        /* Component Cards */
+        .component-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .component-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .component-card:hover {
+            border-color: var(--accent);
+        }
+
+        .component-card .card-num {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            background: var(--accent);
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .component-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .component-card .card-model {
+            font-size: 12px;
+            color: var(--accent2);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .component-card .card-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .component-card .card-price {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 4px 12px;
+            background: rgba(0,230,118,0.1);
+            border: 1px solid rgba(0,230,118,0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--green);
+        }
+
+        /* Tables */
+        .pin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+
+        .pin-table th {
+            background: var(--surface2);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .pin-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pin-table tr:hover td {
+            background: rgba(108,92,231,0.05);
+        }
+
+        .pin-table .wire-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .pin-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(108,92,231,0.15);
+            border: 1px solid rgba(108,92,231,0.3);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        /* Wiring Diagram */
+        .wiring-diagram {
+            background: #0d0d18;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--accent2);
+        }
+
+        /* Code blocks */
+        pre {
+            background: #0d0d18;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 16px 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .code-filename {
+            display: inline-block;
+            padding: 4px 14px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 8px 8px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-size: 13px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+        .alert-danger {
+            background: rgba(255,51,102,0.08);
+            border: 1px solid rgba(255,51,102,0.3);
+            color: var(--red);
+        }
+
+        .alert-warning {
+            background: rgba(255,152,0,0.08);
+            border: 1px solid rgba(255,152,0,0.3);
+            color: var(--orange);
+        }
+
+        .alert-info {
+            background: rgba(68,138,255,0.08);
+            border: 1px solid rgba(68,138,255,0.3);
+            color: var(--blue);
+        }
+
+        .alert-success {
+            background: rgba(0,230,118,0.08);
+            border: 1px solid rgba(0,230,118,0.3);
+            color: var(--green);
+        }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 16px;
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--surface2);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent), #ff3366);
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 15px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        /* Total cost box */
+        .total-cost {
+            background: linear-gradient(135deg, rgba(108,92,231,0.15), rgba(255,51,102,0.1));
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px 24px;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .total-cost .label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .total-cost .amount {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), var(--red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .checklist li::before {
+            content: '☐';
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        /* Flow diagram */
+        .flow-diagram {
+            background: linear-gradient(135deg, #0d0d18, #121228);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre;
+            overflow-x: auto;
+            color: #ccc;
+        }
+
+        /* Legend */
+        .wire-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--surface2);
+            border-radius: 10px;
+        }
+
+        .wire-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .wire-swatch {
+            width: 24px;
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        /* Print button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--accent), #ff3366);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(108,92,231,0.4);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(108,92,231,0.6);
+        }
+
+        /* TOC */
+        .toc {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .toc li {
+            padding: 10px 16px;
+            border-left: 3px solid var(--border);
+            margin: 4px 0;
+            transition: border-color 0.3s;
+        }
+
+        .toc li:hover {
+            border-color: var(--accent);
+        }
+
+        .toc a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        .toc .toc-num {
+            color: var(--accent);
+            font-weight: 700;
+            margin-right: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        /* Visual schematic styles */
+        .schematic-box {
+            display: inline-block;
+            background: var(--surface2);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 8px;
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .schematic-box.esp32 { border-color: var(--accent); }
+        .schematic-box.mpu { border-color: var(--green); }
+        .schematic-box.gps { border-color: var(--blue); }
+        .schematic-box.power { border-color: var(--orange); }
+
+        .schematic-label {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .schematic-sub {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .comment { color: #546e7a; }
+        .number { color: #f78c6c; }
+        .function { color: #82aaff; }
+        .type { color: #ffcb6b; }
+        .include { color: #89ddff; }
+    </style>
+</head>
+<body>
+
+<!-- Print Button -->
+<button class="print-btn no-print" onclick="window.print()">📄 Save as PDF</button>
+
+<!-- ═══════════════════════ COVER PAGE ═══════════════════════ -->
+<div class="cover-page">
+    <div class="cover-badge">Implementation Guide v1.0</div>
+    <div class="cover-emoji">🚗💥🚨</div>
+    <h1 class="cover-title">Segura SOS</h1>
+    <p class="cover-subtitle">IoT Toy Car — Complete Hardware & Software Implementation Guide</p>
+    <p style="color:#888; max-width:600px; position:relative; z-index:1; font-size: 15px;">
+        ESP32 + MPU6050 + GPS on a Pre-Built RC Car<br>
+        Real-time Crash Detection & Emergency Response System
+    </p>
+    <div class="cover-meta" style="margin-top: 40px;">
+        <span>📅 August 2026</span>
+        <span>👥 Team Segura SOS</span>
+        <span>🔧 Hardware + Software</span>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════ TABLE OF CONTENTS ═══════════════════════ -->
+<div class="page" id="toc">
+    <h1><span class="emoji">📑</span> Table of Contents</h1>
+    <ol class="toc">
+        <li><span class="toc-num">01</span><a href="#section-1">Equipment & Shopping List</a></li>
+        <li><span class="toc-num">02</span><a href="#section-2">Component Pinout Reference</a></li>
+        <li><span class="toc-num">03</span><a href="#section-3">Complete Wiring Connections</a></li>
+        <li><span class="toc-num">04</span><a href="#section-4">Visual Wiring Schematic</a></li>
+        <li><span class="toc-num">05</span><a href="#section-5">Physical Assembly on RC Car</a></li>
+        <li><span class="toc-num">06</span><a href="#section-6">Arduino IDE Setup & Libraries</a></li>
+        <li><span class="toc-num">07</span><a href="#section-7">ESP32 Firmware — config.h</a></li>
+        <li><span class="toc-num">08</span><a href="#section-8">ESP32 Firmware — firmware.ino</a></li>
+        <li><span class="toc-num">09</span><a href="#section-9">System Architecture & Data Flow</a></li>
+        <li><span class="toc-num">10</span><a href="#section-10">Software Backend Changes</a></li>
+        <li><span class="toc-num">11</span><a href="#section-11">Testing & Demo Guide</a></li>
+        <li><span class="toc-num">12</span><a href="#section-12">Troubleshooting</a></li>
+    </ol>
+</div>
+
+<!-- ═══════════════════════ SECTION 1: EQUIPMENT ═══════════════════════ -->
+<div class="page page-break" id="section-1">
+    <h1><span class="section-number">1</span> Equipment & Shopping List</h1>
+    <p class="subtitle">Everything you need to buy — use a pre-built RC car to keep it simple.</p>
+
+    <h2>🚗 The Car</h2>
+    <div class="component-grid">
+        <div class="component-card">
+            <div class="card-num">1</div>
+            <h4>Pre-Built RC Car</h4>
+            <div class="card-model">Any cheap 1:18 or 1:16 scale</div>
+            <p class="card-desc">
+                Any remote-controlled car from a local toy shop or Amazon. You'll drive it with its own remote — the ESP32 just rides on top as a passenger, reading sensors.
+                <br><br>
+                <strong>Look for:</strong> Flat roof/surface for mounting, decent size (not too small), works on 3–6V batteries.
+            </p>
+            <div class="card-price">₹300 – ₹800</div>
+        </div>
+    </div>
+
+    <h2>🧠 Core Electronics</h2>
+    <div class="component-grid">
+        <div class="component-card">
+            <div class="card-num">2</div>
+            <h4>ESP32 DevKit V1</h4>
+            <div class="card-model">ESP-WROOM-32 · 30-pin</div>
+            <p class="card-desc">
+                Dual-core 240MHz MCU with built-in Wi-Fi & Bluetooth. The brain of the IoT system. Connects to your laptop's Wi-Fi and sends sensor data via WebSocket.
+            </p>
+            <div class="card-price">₹400 – ₹500</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">3</div>
+            <h4>MPU6050 (GY-521)</h4>
+            <div class="card-model">3-axis Accel + 3-axis Gyro · I2C</div>
+            <p class="card-desc">
+                6-axis motion sensor. Reads acceleration (G-force) on X/Y/Z axes and angular velocity. This is the crash detector — a sudden spike in G-force means impact.
+            </p>
+            <div class="card-price">₹150 – ₹200</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">4</div>
+            <h4>NEO-6M GPS Module</h4>
+            <div class="card-model">u-blox NEO-6M · UART · 3.3V</div>
+            <p class="card-desc">
+                Satellite GPS receiver with ceramic antenna. Outputs NMEA sentences with lat/lng, speed, altitude. Needs clear sky — works outdoors. Indoor fallback uses default coords.
+            </p>
+            <div class="card-price">₹350 – ₹500</div>
+        </div>
+    </div>
+
+    <h2>⚡ Power & Connectivity</h2>
+    <div class="component-grid">
+        <div class="component-card">
+            <div class="card-num">5</div>
+            <h4>USB Power Bank (Small)</h4>
+            <div class="card-model">5V · 1A+ · ≤100g</div>
+            <p class="card-desc">
+                Powers the ESP32 separately from the car's motors. A small lipstick-style power bank works great. Velcro it to the car's roof. Must have micro-USB or USB-C output.
+            </p>
+            <div class="card-price">₹200 – ₹400</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">6</div>
+            <h4>Jumper Wires</h4>
+            <div class="card-model">M-F × 20, M-M × 20 · 20cm</div>
+            <p class="card-desc">
+                For connecting ESP32 to MPU6050 and GPS. Male-Female for module pins, Male-Male for breadboard. 20cm length is ideal for mounting flexibility.
+            </p>
+            <div class="card-price">₹80</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">7</div>
+            <h4>Mini Breadboard</h4>
+            <div class="card-model">400-point · 55×85mm</div>
+            <p class="card-desc">
+                Optional but recommended. Lets you connect all components without soldering. Mount on car with double-sided tape. Can be skipped if you solder directly.
+            </p>
+            <div class="card-price">₹50</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">8</div>
+            <h4>Micro-USB Cable</h4>
+            <div class="card-model">Data cable (not charge-only!)</div>
+            <p class="card-desc">
+                For flashing firmware from laptop to ESP32. MUST be a data cable — charge-only cables won't work. You probably already have one.
+            </p>
+            <div class="card-price">₹50</div>
+        </div>
+    </div>
+
+    <h2>🔊 Optional Add-ons</h2>
+    <div class="component-grid">
+        <div class="component-card">
+            <div class="card-num">9</div>
+            <h4>Red LED + Buzzer</h4>
+            <div class="card-model">5mm LED + 5V active buzzer</div>
+            <p class="card-desc">
+                Visual and audio crash indicator on the car itself. LED flashes red and buzzer beeps when a crash is detected. Great for demo visibility.
+            </p>
+            <div class="card-price">₹30</div>
+        </div>
+        <div class="component-card">
+            <div class="card-num">10</div>
+            <h4>Mounting Supplies</h4>
+            <div class="card-model">Velcro strips + double-sided tape</div>
+            <p class="card-desc">
+                For attaching ESP32, breadboard, power bank, and GPS module to the RC car. Velcro is best — lets you remove/reattach components easily.
+            </p>
+            <div class="card-price">₹30</div>
+        </div>
+    </div>
+
+    <div class="total-cost">
+        <div class="label">Total Estimated Cost</div>
+        <div class="amount">₹1,400 – ₹2,300</div>
+    </div>
+
+    <div class="alert alert-info">
+        <span class="alert-icon">🛒</span>
+        <div><strong>Where to buy:</strong> All components available on Amazon India, Robu.in, electronicscomp.com, or local electronics markets (SP Road Bangalore, Lamington Road Mumbai, Lajpat Rai Market Delhi).</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 2: PINOUTS ═══════════════════════ -->
+<div class="page page-break" id="section-2">
+    <h1><span class="section-number">2</span> Component Pinout Reference</h1>
+    <p class="subtitle">Know your pins before wiring anything.</p>
+
+    <h2>ESP32 DevKit V1 — Pin Map (30-pin)</h2>
+    <div class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        <div>Only certain GPIO pins are safe to use. Pins <strong>6–11</strong> are connected to internal flash — <strong>never use them</strong>. Pins <strong>34, 35, 36, 39</strong> are input-only (no output).</div>
+    </div>
+
+    <table class="pin-table">
+        <tr>
+            <th>We Use</th>
+            <th>GPIO Pin</th>
+            <th>Function</th>
+            <th>Connected To</th>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 21</span></td>
+            <td>I2C SDA (default)</td>
+            <td>MPU6050 SDA</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 22</span></td>
+            <td>I2C SCL (default)</td>
+            <td>MPU6050 SCL</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 16</span></td>
+            <td>UART2 RX</td>
+            <td>GPS TX</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 17</span></td>
+            <td>UART2 TX</td>
+            <td>GPS RX</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 2</span></td>
+            <td>Onboard LED</td>
+            <td>Status LED</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GPIO 4</span></td>
+            <td>Digital Out</td>
+            <td>Buzzer (+)</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">3.3V</span></td>
+            <td>3.3V Power Out</td>
+            <td>MPU6050 VCC, GPS VCC</td>
+        </tr>
+        <tr>
+            <td>✅</td>
+            <td><span class="pin-badge">GND</span></td>
+            <td>Ground</td>
+            <td>All GND pins</td>
+        </tr>
+    </table>
+
+    <h2>MPU6050 (GY-521) — 8 Pins</h2>
+    <table class="pin-table">
+        <tr><th>Pin</th><th>Function</th><th>Connect To</th><th>Notes</th></tr>
+        <tr><td><strong>VCC</strong></td><td>Power</td><td>ESP32 3.3V</td><td>Works at 3.3V or 5V</td></tr>
+        <tr><td><strong>GND</strong></td><td>Ground</td><td>ESP32 GND</td><td>Common ground</td></tr>
+        <tr><td><strong>SCL</strong></td><td>I2C Clock</td><td>ESP32 GPIO 22</td><td>Default I2C clock</td></tr>
+        <tr><td><strong>SDA</strong></td><td>I2C Data</td><td>ESP32 GPIO 21</td><td>Default I2C data</td></tr>
+        <tr><td><strong>XDA</strong></td><td>Aux I2C Data</td><td><em>Not connected</em></td><td>For daisy-chaining</td></tr>
+        <tr><td><strong>XCL</strong></td><td>Aux I2C Clock</td><td><em>Not connected</em></td><td>For daisy-chaining</td></tr>
+        <tr><td><strong>AD0</strong></td><td>Address select</td><td><em>Not connected</em> (or GND)</td><td>LOW = address 0x68</td></tr>
+        <tr><td><strong>INT</strong></td><td>Interrupt</td><td><em>Not connected</em></td><td>Optional, not needed</td></tr>
+    </table>
+
+    <h2>NEO-6M GPS — 4 Pins</h2>
+    <table class="pin-table">
+        <tr><th>Pin</th><th>Function</th><th>Connect To</th><th>Notes</th></tr>
+        <tr><td><strong>VCC</strong></td><td>Power</td><td>ESP32 3.3V</td><td>3.3V or 5V (check your module)</td></tr>
+        <tr><td><strong>GND</strong></td><td>Ground</td><td>ESP32 GND</td><td>Common ground</td></tr>
+        <tr><td><strong>TX</strong></td><td>Transmit</td><td>ESP32 GPIO 16 (RX2)</td><td>GPS sends data to ESP32</td></tr>
+        <tr><td><strong>RX</strong></td><td>Receive</td><td>ESP32 GPIO 17 (TX2)</td><td>ESP32 sends commands to GPS</td></tr>
+    </table>
+
+    <div class="alert alert-danger">
+        <span class="alert-icon">🔴</span>
+        <div><strong>CRITICAL — TX ↔ RX Crossover:</strong> GPS TX connects to ESP32 RX (GPIO 16). GPS RX connects to ESP32 TX (GPIO 17). They CROSS — this is NOT a mistake!</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 3: WIRING TABLE ═══════════════════════ -->
+<div class="page page-break" id="section-3">
+    <h1><span class="section-number">3</span> Complete Wiring Connections</h1>
+    <p class="subtitle">Every single wire you need to connect, with color coding.</p>
+
+    <h2>Wire Color Legend</h2>
+    <div class="wire-legend">
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#ff0000"></div> Red = 3.3V Power</div>
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#111"></div> Black = Ground (GND)</div>
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#4caf50"></div> Green = I2C SDA (Data)</div>
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#2196f3"></div> Blue = I2C SCL (Clock)</div>
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#ff9800"></div> Orange = UART TX/RX</div>
+        <div class="wire-legend-item"><div class="wire-swatch" style="background:#ffeb3b"></div> Yellow = Signal / LED / Buzzer</div>
+    </div>
+
+    <h2>Connection A — MPU6050 (Accelerometer + Gyroscope)</h2>
+    <p>Protocol: <strong>I2C</strong> — Only 4 wires needed.</p>
+    <table class="pin-table">
+        <tr>
+            <th>Wire #</th>
+            <th>Color</th>
+            <th>From (ESP32)</th>
+            <th>To (MPU6050)</th>
+            <th>Signal</th>
+        </tr>
+        <tr>
+            <td><strong>A1</strong></td>
+            <td><span class="wire-color" style="background:#ff0000"></span> Red</td>
+            <td><span class="pin-badge">3.3V</span></td>
+            <td>VCC</td>
+            <td>Power</td>
+        </tr>
+        <tr>
+            <td><strong>A2</strong></td>
+            <td><span class="wire-color" style="background:#111"></span> Black</td>
+            <td><span class="pin-badge">GND</span></td>
+            <td>GND</td>
+            <td>Ground</td>
+        </tr>
+        <tr>
+            <td><strong>A3</strong></td>
+            <td><span class="wire-color" style="background:#4caf50"></span> Green</td>
+            <td><span class="pin-badge">GPIO 21</span></td>
+            <td>SDA</td>
+            <td>I2C Data</td>
+        </tr>
+        <tr>
+            <td><strong>A4</strong></td>
+            <td><span class="wire-color" style="background:#2196f3"></span> Blue</td>
+            <td><span class="pin-badge">GPIO 22</span></td>
+            <td>SCL</td>
+            <td>I2C Clock</td>
+        </tr>
+    </table>
+
+    <h2>Connection B — NEO-6M GPS Module</h2>
+    <p>Protocol: <strong>UART (Serial)</strong> — Only 4 wires needed.</p>
+    <table class="pin-table">
+        <tr>
+            <th>Wire #</th>
+            <th>Color</th>
+            <th>From (ESP32)</th>
+            <th>To (NEO-6M)</th>
+            <th>Signal</th>
+        </tr>
+        <tr>
+            <td><strong>B1</strong></td>
+            <td><span class="wire-color" style="background:#ff0000"></span> Red</td>
+            <td><span class="pin-badge">3.3V</span></td>
+            <td>VCC</td>
+            <td>Power</td>
+        </tr>
+        <tr>
+            <td><strong>B2</strong></td>
+            <td><span class="wire-color" style="background:#111"></span> Black</td>
+            <td><span class="pin-badge">GND</span></td>
+            <td>GND</td>
+            <td>Ground</td>
+        </tr>
+        <tr>
+            <td><strong>B3</strong></td>
+            <td><span class="wire-color" style="background:#ff9800"></span> Orange</td>
+            <td><span class="pin-badge">GPIO 16</span> (RX2)</td>
+            <td>TX</td>
+            <td>GPS data → ESP32</td>
+        </tr>
+        <tr>
+            <td><strong>B4</strong></td>
+            <td><span class="wire-color" style="background:#ff9800; opacity:0.6"></span> Lt. Orange</td>
+            <td><span class="pin-badge">GPIO 17</span> (TX2)</td>
+            <td>RX</td>
+            <td>ESP32 cmds → GPS</td>
+        </tr>
+    </table>
+
+    <h2>Connection C — LED + Buzzer (Optional)</h2>
+    <table class="pin-table">
+        <tr>
+            <th>Wire #</th>
+            <th>Color</th>
+            <th>From (ESP32)</th>
+            <th>To</th>
+            <th>Signal</th>
+        </tr>
+        <tr>
+            <td><strong>C1</strong></td>
+            <td><span class="wire-color" style="background:#ffeb3b"></span> Yellow</td>
+            <td><span class="pin-badge">GPIO 2</span></td>
+            <td>LED Anode (+) (long leg)</td>
+            <td>Crash indicator</td>
+        </tr>
+        <tr>
+            <td><strong>C2</strong></td>
+            <td><span class="wire-color" style="background:#111"></span> Black</td>
+            <td><span class="pin-badge">GND</span></td>
+            <td>LED Cathode (–) (short leg)</td>
+            <td>Ground (via 220Ω resistor)</td>
+        </tr>
+        <tr>
+            <td><strong>C3</strong></td>
+            <td><span class="wire-color" style="background:#ffeb3b"></span> Yellow</td>
+            <td><span class="pin-badge">GPIO 4</span></td>
+            <td>Buzzer (+)</td>
+            <td>Crash alarm</td>
+        </tr>
+        <tr>
+            <td><strong>C4</strong></td>
+            <td><span class="wire-color" style="background:#111"></span> Black</td>
+            <td><span class="pin-badge">GND</span></td>
+            <td>Buzzer (–)</td>
+            <td>Ground</td>
+        </tr>
+    </table>
+
+    <div class="alert alert-success">
+        <span class="alert-icon">✅</span>
+        <div><strong>Total wires:</strong> Only <strong>8 wires</strong> for the essential setup (MPU6050 + GPS). Add 4 more for LED + buzzer = <strong>12 wires total</strong>. That's it!</div>
+    </div>
+
+    <div class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Shared Power Rail:</strong> Both MPU6050 and GPS share the same 3.3V and GND pins from ESP32. Use a breadboard to split the 3.3V and GND lines, or connect both VCC wires to the same 3.3V pin.</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 4: VISUAL SCHEMATIC ═══════════════════════ -->
+<div class="page page-break" id="section-4">
+    <h1><span class="section-number">4</span> Visual Wiring Schematic</h1>
+    <p class="subtitle">The big picture — how everything connects physically.</p>
+
+    <div class="wiring-diagram">
+                            ┌─────────────────────────────────────┐
+                            │         USB POWER BANK (5V)         │
+                            │         ┌───────────┐               │
+                            │         │  ■■■■■■■  │               │
+                            │         └─────┬─────┘               │
+                            │           USB Cable                 │
+                            │               │                     │
+     ┌──────────────────────┼───────────────┼─────────────────────┼──────────────────┐
+     │                      │          ┌────┴────┐                │                  │
+     │    ┌─────────────┐   │          │  ESP32  │                │  ┌────────────┐  │
+     │    │   MPU6050   │   │          │ DevKit  │                │  │  NEO-6M    │  │
+     │    │  ┌───────┐  │   │          │  V1     │                │  │  GPS       │  │
+     │    │  │ GY521 │  │   │          │         │                │  │ ┌────────┐ │  │
+     │    │  └───────┘  │   │          │  30-pin │                │  │ │ u-blox │ │  │
+     │    │             │   │          │         │                │  │ └────────┘ │  │
+     │    │ VCC ────────┼───┼──── 3.3V ┤         ├ 3.3V ─────────┼──┤ VCC        │  │
+     │    │ GND ────────┼───┼──── GND  ┤         ├ GND  ─────────┼──┤ GND        │  │
+     │    │ SDA ────────┼───┼─ GPIO 21 ┤         ├ GPIO 16 (RX2)─┼──┤ TX         │  │
+     │    │ SCL ────────┼───┼─ GPIO 22 ┤         ├ GPIO 17 (TX2)─┼──┤ RX         │  │
+     │    │ XDA         │   │          │         │                │  │            │  │
+     │    │ XCL    N/C  │   │          │         │                │  │ [Ceramic   │  │
+     │    │ AD0         │   │  GPIO 2 ─┤         │                │  │  Antenna]  │  │
+     │    │ INT         │   │     │     │         │                │  └────────────┘  │
+     │    └─────────────┘   │     │     │         │                │                  │
+     │                      │     ▼     │         │                │                  │
+     │                      │   ┌───┐   │         │                │                  │
+     │                      │   │LED│   │         │                │                  │
+     │                      │   └─┬─┘   │         │                │                  │
+     │                      │     │     │         │                │                  │
+     │                      │    GND    │         │                │                  │
+     │                      │           │         │                │                  │
+     │                      │  GPIO 4 ──┤         │                │                  │
+     │                      │     │     └────┬────┘                │                  │
+     │                      │     ▼          │                     │                  │
+     │                      │  ┌──────┐      │                     │                  │
+     │                      │  │Buzzer│   USB Port                 │                  │
+     │                      │  └──┬───┘   (for flashing            │                  │
+     │                      │     │        firmware)               │                  │
+     │                      │    GND                               │                  │
+     │                      │                                      │                  │
+     │                      └──────────────────────────────────────┘                  │
+     │                                                                                │
+     │                    ═══════════════════════════════════════                      │
+     │                     All mounted on top of Pre-Built RC Car                     │
+     │                    ═══════════════════════════════════════                      │
+     │                                                                                │
+     │                          🚗 RC Car (driven by its own remote)                  │
+     └────────────────────────────────────────────────────────────────────────────────┘</div>
+
+    <h2>Breadboard Layout</h2>
+    <div class="wiring-diagram">
+   Breadboard (400-point)
+   ┌──────────────────────────────────────────────────────┐
+   │  + (Power Rail)  ◄── ESP32 3.3V (Red wire)          │
+   │  - (Ground Rail) ◄── ESP32 GND  (Black wire)        │
+   │                                                      │
+   │  Row 1-4:  ESP32 pins (plugged into breadboard)      │
+   │                                                      │
+   │  Row 10:   MPU6050 VCC ──── + rail                   │
+   │  Row 11:   MPU6050 GND ──── - rail                   │
+   │  Row 12:   MPU6050 SDA ──── GPIO 21 (green wire)     │
+   │  Row 13:   MPU6050 SCL ──── GPIO 22 (blue wire)      │
+   │                                                      │
+   │  Row 20:   GPS VCC ──────── + rail                   │
+   │  Row 21:   GPS GND ──────── - rail                   │
+   │  Row 22:   GPS TX  ──────── GPIO 16 (orange wire)    │
+   │  Row 23:   GPS RX  ──────── GPIO 17 (orange wire)    │
+   │                                                      │
+   │  Row 28:   LED anode (+) ── GPIO 2 (via 220Ω)        │
+   │  Row 29:   LED cathode ──── - rail                   │
+   │  Row 30:   Buzzer (+) ───── GPIO 4                   │
+   │  Row 31:   Buzzer (-) ───── - rail                   │
+   └──────────────────────────────────────────────────────┘</div>
+</div>
+
+<!-- ═══════════════════════ SECTION 5: PHYSICAL ASSEMBLY ═══════════════════════ -->
+<div class="page page-break" id="section-5">
+    <h1><span class="section-number">5</span> Physical Assembly on RC Car</h1>
+    <p class="subtitle">Step-by-step guide to mounting everything on the car.</p>
+
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <h4>Prepare the RC Car</h4>
+            <p>Open the RC car and ensure it works with its remote. Identify a flat area on the roof/top where you can mount the breadboard. Clean the surface.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <h4>Mount the Mini Breadboard</h4>
+            <p>Peel the adhesive backing off the breadboard and stick it to the top of the RC car. If no adhesive, use velcro strips or double-sided tape. Place it centrally for balance.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <h4>Place ESP32 on Breadboard</h4>
+            <p>Push the ESP32 DevKit pins into the breadboard, straddling the center divider. The USB port should face outward (toward the rear of the car) for easy access.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+            <h4>Connect MPU6050</h4>
+            <p>Wire the MPU6050 using 4 jumper wires (VCC→3.3V, GND→GND, SDA→GPIO21, SCL→GPIO22). Mount the sensor <strong>flat on the car body</strong> — orientation matters! The chip-face should point UP, with the X-axis pointing forward (toward the front of the car).</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+            <h4>Connect GPS Module</h4>
+            <p>Wire the NEO-6M with 4 wires (VCC→3.3V, GND→GND, TX→GPIO16, RX→GPIO17). Mount the GPS module with its <strong>ceramic antenna facing skyward</strong> (the square patch antenna on top). Tape it to the highest point on the car.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+            <h4>Add LED + Buzzer (Optional)</h4>
+            <p>Connect the LED (GPIO 2 → 220Ω resistor → LED anode → LED cathode → GND) and buzzer (GPIO 4 → buzzer+ → buzzer– → GND). Mount them where they're visible.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-content">
+            <h4>Attach Power Bank</h4>
+            <p>Velcro or tape the USB power bank to the car. Connect it to ESP32 via micro-USB/USB-C cable. This powers the ESP32 and all sensors independently from the car's motors.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-content">
+            <h4>Secure All Wires</h4>
+            <p>Use small cable ties or tape to secure loose jumper wires to the car body. Make sure nothing hangs over the wheels or interferes with the car's movement.</p>
+        </div>
+    </div>
+
+    <div class="alert alert-danger">
+        <span class="alert-icon">🔴</span>
+        <div><strong>MPU6050 Orientation is Critical!</strong> The sensor must be mounted flat and rigid. Any tilt or loose mounting will give noisy readings and false crash detections. Use foam tape for vibration dampening if the car vibrates a lot.</div>
+    </div>
+
+    <div class="alert alert-info">
+        <span class="alert-icon">💡</span>
+        <div><strong>Weight Balance:</strong> Place the power bank near the center of the car. Heavy components at the edges can make the car tip during turns.</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 6: ARDUINO IDE ═══════════════════════ -->
+<div class="page page-break" id="section-6">
+    <h1><span class="section-number">6</span> Arduino IDE Setup & Libraries</h1>
+    <p class="subtitle">One-time setup to flash firmware to the ESP32.</p>
+
+    <h2>Step 1 — Install Arduino IDE</h2>
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <h4>Download Arduino IDE 2.x</h4>
+            <p>Go to <strong>https://www.arduino.cc/en/software</strong> → Download Arduino IDE 2.x for Windows. Install with default settings.</p>
+        </div>
+    </div>
+
+    <h2>Step 2 — Add ESP32 Board Support</h2>
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <h4>Open Arduino IDE → File → Preferences</h4>
+            <p>In the "Additional boards manager URLs" field, paste this URL:<br>
+            <code style="color: var(--accent2); background: var(--surface2); padding: 4px 10px; border-radius: 4px;">https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json</code>
+            </p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <h4>Install ESP32 Board Package</h4>
+            <p>Go to <strong>Tools → Board → Boards Manager</strong>. Search for <strong>"esp32"</strong>. Install <strong>"esp32 by Espressif Systems"</strong> (version 2.x or 3.x).</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+            <h4>Select Your Board</h4>
+            <p><strong>Tools → Board → esp32 → "ESP32 Dev Module"</strong>. Leave all other settings at default (Upload Speed: 921600, Flash Size: 4MB, etc.).</p>
+        </div>
+    </div>
+
+    <h2>Step 3 — Install Required Libraries</h2>
+    <p>Go to <strong>Sketch → Include Library → Manage Libraries</strong> and install each of these:</p>
+
+    <table class="pin-table">
+        <tr>
+            <th>Library Name</th>
+            <th>Author</th>
+            <th>Purpose</th>
+        </tr>
+        <tr>
+            <td><strong>WebSockets</strong></td>
+            <td>Markus Sattler (Links2004)</td>
+            <td>WebSocket client to connect to M2 server</td>
+        </tr>
+        <tr>
+            <td><strong>ArduinoJson</strong></td>
+            <td>Benoit Blanchon</td>
+            <td>Build and parse JSON payloads</td>
+        </tr>
+        <tr>
+            <td><strong>TinyGPSPlus</strong></td>
+            <td>Mikal Hart</td>
+            <td>Parse NMEA sentences from GPS</td>
+        </tr>
+        <tr>
+            <td><strong>Adafruit MPU6050</strong></td>
+            <td>Adafruit</td>
+            <td>Read accelerometer/gyroscope data</td>
+        </tr>
+        <tr>
+            <td><strong>Adafruit Unified Sensor</strong></td>
+            <td>Adafruit</td>
+            <td>Dependency for MPU6050 library</td>
+        </tr>
+        <tr>
+            <td><strong>PubSubClient</strong></td>
+            <td>Nick O'Leary</td>
+            <td>MQTT publish/subscribe client</td>
+        </tr>
+    </table>
+
+    <h2>Step 4 — Install USB Driver (if needed)</h2>
+    <div class="alert alert-info">
+        <span class="alert-icon">🔌</span>
+        <div>Most ESP32 DevKit V1 boards use a <strong>CP2102</strong> or <strong>CH340</strong> USB-to-Serial chip. If your computer doesn't recognize the board:
+        <ul style="margin-top: 8px;">
+            <li><strong>CP2102:</strong> Download driver from <code>silabs.com/developers/usb-to-uart-bridge-vcp-drivers</code></li>
+            <li><strong>CH340:</strong> Download driver from <code>sparks.fun/ch340</code></li>
+        </ul>
+        After installing, check <strong>Device Manager → Ports (COM)</strong> for a new COM port.</div>
+    </div>
+
+    <h2>Step 5 — Test the Connection</h2>
+    <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+            <h4>Verify ESP32 is detected</h4>
+            <p>Connect ESP32 via USB. In Arduino IDE: <strong>Tools → Port</strong> → Select the COM port that appeared (e.g., COM3, COM5). Upload a blank sketch to test — it should compile and upload with "Done uploading" message.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 7: CONFIG.H ═══════════════════════ -->
+<div class="page page-break" id="section-7">
+    <h1><span class="section-number">7</span> ESP32 Firmware — config.h</h1>
+    <p class="subtitle">Configuration file — edit Wi-Fi credentials and server IP here.</p>
+
+    <div class="alert alert-warning">
+        <span class="alert-icon">✏️</span>
+        <div>You <strong>MUST</strong> edit the Wi-Fi SSID, password, and SERVER_IP before flashing. The SERVER_IP is your laptop's LAN IP address (find it with <code>ipconfig</code> in Command Prompt).</div>
+    </div>
+
+    <div class="code-filename">config.h</div>
+<pre><span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">//  Segura SOS — ESP32 IoT Car Configuration</span>
+<span class="comment">//  Edit these values before flashing!</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="include">#ifndef</span> CONFIG_H
+<span class="include">#define</span> CONFIG_H
+
+<span class="comment">// ── Wi-Fi Credentials ──────────────────────────────────────</span>
+<span class="include">#define</span> <span class="type">WIFI_SSID</span>     <span class="string">"YOUR_WIFI_NAME"</span>       <span class="comment">// ← Change this!</span>
+<span class="include">#define</span> <span class="type">WIFI_PASSWORD</span> <span class="string">"YOUR_WIFI_PASSWORD"</span>   <span class="comment">// ← Change this!</span>
+
+<span class="comment">// ── Server Configuration ───────────────────────────────────</span>
+<span class="comment">// Your laptop's LAN IP (run 'ipconfig' to find it)</span>
+<span class="include">#define</span> <span class="type">SERVER_IP</span>     <span class="string">"192.168.1.100"</span>        <span class="comment">// ← Change this!</span>
+<span class="include">#define</span> <span class="type">SERVER_WS_PORT</span>  <span class="number">8000</span>                <span class="comment">// M2 AI Engine WebSocket port</span>
+<span class="include">#define</span> <span class="type">SERVER_WS_PATH</span>  <span class="string">"/ws"</span>               <span class="comment">// M2 WebSocket endpoint</span>
+
+<span class="comment">// ── MQTT Configuration ─────────────────────────────────────</span>
+<span class="include">#define</span> <span class="type">MQTT_BROKER</span>      <span class="string">"broker.hivemq.com"</span>  <span class="comment">// Public broker (or use local Mosquitto)</span>
+<span class="include">#define</span> <span class="type">MQTT_PORT</span>        <span class="number">1883</span>
+<span class="include">#define</span> <span class="type">MQTT_TOPIC_TELEMETRY</span>  <span class="string">"suraksha/telemetry"</span>
+<span class="include">#define</span> <span class="type">MQTT_TOPIC_COMMANDS</span>   <span class="string">"suraksha/commands"</span>
+<span class="include">#define</span> <span class="type">MQTT_CLIENT_ID</span>        <span class="string">"suraksha-car-01"</span>
+
+<span class="comment">// ── Pin Definitions ────────────────────────────────────────</span>
+<span class="comment">// I2C (MPU6050)</span>
+<span class="include">#define</span> <span class="type">PIN_SDA</span>       <span class="number">21</span>
+<span class="include">#define</span> <span class="type">PIN_SCL</span>       <span class="number">22</span>
+
+<span class="comment">// UART2 (GPS)</span>
+<span class="include">#define</span> <span class="type">PIN_GPS_RX</span>    <span class="number">16</span>     <span class="comment">// ESP32 RX ← GPS TX</span>
+<span class="include">#define</span> <span class="type">PIN_GPS_TX</span>    <span class="number">17</span>     <span class="comment">// ESP32 TX → GPS RX</span>
+<span class="include">#define</span> <span class="type">GPS_BAUD</span>      <span class="number">9600</span>
+
+<span class="comment">// Indicators</span>
+<span class="include">#define</span> <span class="type">PIN_LED</span>       <span class="number">2</span>      <span class="comment">// Onboard LED (or external)</span>
+<span class="include">#define</span> <span class="type">PIN_BUZZER</span>    <span class="number">4</span>      <span class="comment">// Active buzzer</span>
+
+<span class="comment">// ── Crash Detection Thresholds ─────────────────────────────</span>
+<span class="include">#define</span> <span class="type">CRASH_G_THRESHOLD</span>       <span class="number">2.5</span>    <span class="comment">// G-force above this = crash</span>
+<span class="include">#define</span> <span class="type">HARD_BRAKE_G_THRESHOLD</span>  <span class="number">1.5</span>    <span class="comment">// G-force above this = hard brake</span>
+<span class="include">#define</span> <span class="type">CRASH_COOLDOWN_MS</span>       <span class="number">3000</span>   <span class="comment">// Minimum ms between crash events</span>
+<span class="include">#define</span> <span class="type">BUZZER_DURATION_MS</span>      <span class="number">2000</span>   <span class="comment">// How long buzzer sounds on crash</span>
+
+<span class="comment">// ── Telemetry Timing ───────────────────────────────────────</span>
+<span class="include">#define</span> <span class="type">TELEMETRY_INTERVAL_MS</span>   <span class="number">500</span>    <span class="comment">// Send data every 500ms</span>
+<span class="include">#define</span> <span class="type">SENSOR_READ_INTERVAL_MS</span> <span class="number">20</span>     <span class="comment">// Read MPU6050 every 20ms (50Hz)</span>
+
+<span class="comment">// ── Default GPS (fallback when no satellite fix) ───────────</span>
+<span class="include">#define</span> <span class="type">DEFAULT_LAT</span>   <span class="number">26.2183</span>    <span class="comment">// Gwalior, India</span>
+<span class="include">#define</span> <span class="type">DEFAULT_LNG</span>   <span class="number">78.1828</span>
+
+<span class="include">#endif</span></pre>
+</div>
+
+<!-- ═══════════════════════ SECTION 8: FIRMWARE.INO ═══════════════════════ -->
+<div class="page page-break" id="section-8">
+    <h1><span class="section-number">8</span> ESP32 Firmware — firmware.ino</h1>
+    <p class="subtitle">The main Arduino sketch that runs on the ESP32 inside the toy car.</p>
+
+    <div class="code-filename">firmware.ino</div>
+<pre><span class="comment">// ═══════════════════════════════════════════════════════════════</span>
+<span class="comment">//  Segura SOS — ESP32 IoT Car Firmware</span>
+<span class="comment">//  Reads MPU6050 + GPS, sends data to M2 via WebSocket + MQTT</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════════</span>
+
+<span class="include">#include</span> <span class="string">&lt;WiFi.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;WebSocketsClient.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;ArduinoJson.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;Wire.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;Adafruit_MPU6050.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;Adafruit_Sensor.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;TinyGPSPlus.h&gt;</span>
+<span class="include">#include</span> <span class="string">&lt;PubSubClient.h&gt;</span>
+<span class="include">#include</span> <span class="string">"config.h"</span>
+
+<span class="comment">// ── Objects ────────────────────────────────────────────────</span>
+<span class="type">Adafruit_MPU6050</span> mpu;
+<span class="type">TinyGPSPlus</span> gps;
+<span class="type">HardwareSerial</span> gpsSerial(<span class="number">2</span>);  <span class="comment">// UART2</span>
+
+<span class="type">WiFiClient</span> espClient;
+<span class="type">WiFiClient</span> mqttWifiClient;
+<span class="type">PubSubClient</span> mqttClient(mqttWifiClient);
+<span class="type">WebSocketsClient</span> webSocket;
+
+<span class="comment">// ── State Variables ────────────────────────────────────────</span>
+<span class="keyword">float</span> currentG = <span class="number">1.0</span>;
+<span class="keyword">float</span> accelX = <span class="number">0</span>, accelY = <span class="number">0</span>, accelZ = <span class="number">0</span>;
+<span class="keyword">float</span> gyroX = <span class="number">0</span>, gyroY = <span class="number">0</span>, gyroZ = <span class="number">0</span>;
+<span class="keyword">float</span> gpsLat = DEFAULT_LAT;
+<span class="keyword">float</span> gpsLng = DEFAULT_LNG;
+<span class="keyword">float</span> gpsSpeed = <span class="number">0.0</span>;
+<span class="keyword">bool</span>  gpsFix = <span class="keyword">false</span>;
+
+<span class="keyword">unsigned long</span> lastTelemetry = <span class="number">0</span>;
+<span class="keyword">unsigned long</span> lastSensorRead = <span class="number">0</span>;
+<span class="keyword">unsigned long</span> lastCrashTime = <span class="number">0</span>;
+<span class="keyword">unsigned long</span> buzzerOffTime = <span class="number">0</span>;
+<span class="keyword">bool</span> wsConnected = <span class="keyword">false</span>;
+<span class="keyword">int</span> eventCounter = <span class="number">0</span>;
+
+<span class="comment">// ── Generate unique event ID ───────────────────────────────</span>
+<span class="type">String</span> <span class="function">generateEventId</span>() {
+    eventCounter++;
+    <span class="keyword">return</span> <span class="string">"iot-"</span> + String(millis()) + <span class="string">"-"</span> + String(eventCounter);
+}
+
+<span class="comment">// ── WebSocket event handler ────────────────────────────────</span>
+<span class="keyword">void</span> <span class="function">webSocketEvent</span>(<span class="type">WStype_t</span> type, <span class="keyword">uint8_t</span>* payload, <span class="keyword">size_t</span> length) {
+    <span class="keyword">switch</span> (type) {
+        <span class="keyword">case</span> WStype_DISCONNECTED:
+            Serial.println(<span class="string">"[WS] Disconnected"</span>);
+            wsConnected = <span class="keyword">false</span>;
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> WStype_CONNECTED:
+            Serial.println(<span class="string">"[WS] Connected to M2!"</span>);
+            wsConnected = <span class="keyword">true</span>;
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> WStype_TEXT:
+            Serial.printf(<span class="string">"[WS] Received: %s\n"</span>, payload);
+            <span class="comment">// Parse analysis results from M2 (optional: display on OLED)</span>
+            <span class="keyword">break</span>;
+    }
+}
+
+<span class="comment">// ── MQTT callback (for receiving commands) ─────────────────</span>
+<span class="keyword">void</span> <span class="function">mqttCallback</span>(<span class="keyword">char</span>* topic, <span class="keyword">byte</span>* payload, <span class="keyword">unsigned int</span> length) {
+    <span class="type">String</span> message;
+    <span class="keyword">for</span> (<span class="keyword">unsigned int</span> i = <span class="number">0</span>; i &lt; length; i++) {
+        message += (<span class="keyword">char</span>)payload[i];
+    }
+    Serial.printf(<span class="string">"[MQTT] %s: %s\n"</span>, topic, message.c_str());
+}
+
+<span class="comment">// ── Connect to MQTT broker ─────────────────────────────────</span>
+<span class="keyword">void</span> <span class="function">reconnectMQTT</span>() {
+    <span class="keyword">if</span> (!mqttClient.connected()) {
+        Serial.print(<span class="string">"[MQTT] Connecting..."</span>);
+        <span class="keyword">if</span> (mqttClient.connect(MQTT_CLIENT_ID)) {
+            Serial.println(<span class="string">" connected!"</span>);
+            mqttClient.subscribe(MQTT_TOPIC_COMMANDS);
+        } <span class="keyword">else</span> {
+            Serial.printf(<span class="string">" failed (rc=%d)\n"</span>, mqttClient.state());
+        }
+    }
+}
+
+<span class="comment">// ── Read MPU6050 Sensor ────────────────────────────────────</span>
+<span class="keyword">void</span> <span class="function">readMPU6050</span>() {
+    <span class="type">sensors_event_t</span> a, g, temp;
+    mpu.getEvent(&amp;a, &amp;g, &amp;temp);
+
+    <span class="comment">// Raw acceleration in m/s² → convert to G</span>
+    accelX = a.acceleration.x / <span class="number">9.81</span>;
+    accelY = a.acceleration.y / <span class="number">9.81</span>;
+    accelZ = a.acceleration.z / <span class="number">9.81</span>;
+
+    <span class="comment">// Total G-force magnitude</span>
+    currentG = sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
+
+    <span class="comment">// Gyroscope data (rad/s)</span>
+    gyroX = g.gyro.x;
+    gyroY = g.gyro.y;
+    gyroZ = g.gyro.z;
+}
+
+<span class="comment">// ── Read GPS ───────────────────────────────────────────────</span>
+<span class="keyword">void</span> <span class="function">readGPS</span>() {
+    <span class="keyword">while</span> (gpsSerial.available() > <span class="number">0</span>) {
+        gps.encode(gpsSerial.read());
+    }
+
+    <span class="keyword">if</span> (gps.location.isValid()) {
+        gpsLat = gps.location.lat();
+        gpsLng = gps.location.lng();
+        gpsFix = <span class="keyword">true</span>;
+    }
+
+    <span class="keyword">if</span> (gps.speed.isValid()) {
+        gpsSpeed = gps.speed.kmph();
+    }
+}
+
+<span class="comment">// ── Determine event type based on G-force ──────────────────</span>
+<span class="type">String</span> <span class="function">classifyEvent</span>(<span class="keyword">float</span> g) {
+    <span class="keyword">if</span> (g > CRASH_G_THRESHOLD) <span class="keyword">return</span> <span class="string">"crash"</span>;
+    <span class="keyword">if</span> (g > HARD_BRAKE_G_THRESHOLD) <span class="keyword">return</span> <span class="string">"hard_brake"</span>;
+    <span class="keyword">return</span> <span class="string">"normal"</span>;
+}
+
+<span class="comment">// ── Trigger crash alarm (LED + Buzzer) ──────────────────────</span>
+<span class="keyword">void</span> <span class="function">triggerCrashAlarm</span>() {
+    digitalWrite(PIN_LED, HIGH);
+    digitalWrite(PIN_BUZZER, HIGH);
+    buzzerOffTime = millis() + BUZZER_DURATION_MS;
+    Serial.println(<span class="string">"🚨 CRASH DETECTED! Alarm triggered."</span>);
+}
+
+<span class="comment">// ── Build and send telemetry JSON ───────────────────────────</span>
+<span class="keyword">void</span> <span class="function">sendTelemetry</span>(<span class="type">String</span> eventType) {
+    <span class="type">StaticJsonDocument</span>&lt;<span class="number">512</span>&gt; doc;
+
+    doc[<span class="string">"event_id"</span>]  = generateEventId();
+    doc[<span class="string">"timestamp"</span>] = String(millis());  <span class="comment">// M2 will re-timestamp</span>
+    doc[<span class="string">"type"</span>]      = eventType;
+    doc[<span class="string">"source"</span>]    = <span class="string">"iot"</span>;
+    doc[<span class="string">"speed_kmh"</span>] = gpsSpeed;
+    doc[<span class="string">"impact_g"</span>]  = currentG;
+    doc[<span class="string">"weather"</span>]   = <span class="string">"clear"</span>;  <span class="comment">// Can add weather sensor later</span>
+
+    <span class="type">JsonObject</span> gpsObj = doc.createNestedObject(<span class="string">"gps"</span>);
+    gpsObj[<span class="string">"lat"</span>] = gpsLat;
+    gpsObj[<span class="string">"lng"</span>] = gpsLng;
+    gpsObj[<span class="string">"accuracy_m"</span>] = gpsFix ? <span class="number">5.0</span> : <span class="number">100.0</span>;
+
+    <span class="comment">// Add raw accelerometer data for richer telemetry</span>
+    <span class="type">JsonObject</span> rawAccel = doc.createNestedObject(<span class="string">"raw_accel"</span>);
+    rawAccel[<span class="string">"x"</span>] = accelX;
+    rawAccel[<span class="string">"y"</span>] = accelY;
+    rawAccel[<span class="string">"z"</span>] = accelZ;
+
+    <span class="type">String</span> json;
+    serializeJson(doc, json);
+
+    <span class="comment">// Send via WebSocket (primary channel)</span>
+    <span class="keyword">if</span> (wsConnected) {
+        webSocket.sendTXT(json);
+        Serial.printf(<span class="string">"[WS] Sent: %s → %s (G=%.2f)\n"</span>,
+                       eventType.c_str(), gpsFix ? <span class="string">"GPS"</span> : <span class="string">"default"</span>, currentG);
+    }
+
+    <span class="comment">// Send via MQTT (backup channel)</span>
+    <span class="keyword">if</span> (mqttClient.connected()) {
+        mqttClient.publish(MQTT_TOPIC_TELEMETRY, json.c_str());
+    }
+}
+
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">//  SETUP</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="keyword">void</span> <span class="function">setup</span>() {
+    Serial.begin(<span class="number">115200</span>);
+    Serial.println(<span class="string">"\n═══ Segura SOS — IoT Car Starting ═══"</span>);
+
+    <span class="comment">// ── Pin setup ─────────────────────────────────────────</span>
+    pinMode(PIN_LED, OUTPUT);
+    pinMode(PIN_BUZZER, OUTPUT);
+    digitalWrite(PIN_LED, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
+
+    <span class="comment">// ── I2C + MPU6050 ─────────────────────────────────────</span>
+    Wire.begin(PIN_SDA, PIN_SCL);
+    <span class="keyword">if</span> (!mpu.begin()) {
+        Serial.println(<span class="string">"[ERROR] MPU6050 not found! Check wiring."</span>);
+        <span class="keyword">while</span> (<span class="number">1</span>) {
+            digitalWrite(PIN_LED, !digitalRead(PIN_LED));
+            delay(<span class="number">200</span>);  <span class="comment">// Blink LED rapidly = error</span>
+        }
+    }
+    Serial.println(<span class="string">"[OK] MPU6050 initialized"</span>);
+    mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+    mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+    mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+    <span class="comment">// ── GPS (UART2) ───────────────────────────────────────</span>
+    gpsSerial.begin(GPS_BAUD, SERIAL_8N1, PIN_GPS_RX, PIN_GPS_TX);
+    Serial.println(<span class="string">"[OK] GPS UART initialized"</span>);
+
+    <span class="comment">// ── Wi-Fi ─────────────────────────────────────────────</span>
+    Serial.printf(<span class="string">"[WiFi] Connecting to %s"</span>, WIFI_SSID);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    <span class="keyword">int</span> attempts = <span class="number">0</span>;
+    <span class="keyword">while</span> (WiFi.status() != WL_CONNECTED &amp;&amp; attempts &lt; <span class="number">30</span>) {
+        delay(<span class="number">500</span>);
+        Serial.print(<span class="string">"."</span>);
+        attempts++;
+    }
+    <span class="keyword">if</span> (WiFi.status() == WL_CONNECTED) {
+        Serial.printf(<span class="string">"\n[WiFi] Connected! IP: %s\n"</span>, WiFi.localIP().toString().c_str());
+    } <span class="keyword">else</span> {
+        Serial.println(<span class="string">"\n[WiFi] FAILED! Running in offline mode."</span>);
+    }
+
+    <span class="comment">// ── WebSocket → M2 ────────────────────────────────────</span>
+    webSocket.begin(SERVER_IP, SERVER_WS_PORT, SERVER_WS_PATH);
+    webSocket.onEvent(webSocketEvent);
+    webSocket.setReconnectInterval(<span class="number">3000</span>);
+    Serial.printf(<span class="string">"[WS] Target: ws://%s:%d%s\n"</span>, SERVER_IP, SERVER_WS_PORT, SERVER_WS_PATH);
+
+    <span class="comment">// ── MQTT ──────────────────────────────────────────────</span>
+    mqttClient.setServer(MQTT_BROKER, MQTT_PORT);
+    mqttClient.setCallback(mqttCallback);
+    Serial.printf(<span class="string">"[MQTT] Broker: %s:%d\n"</span>, MQTT_BROKER, MQTT_PORT);
+
+    <span class="comment">// ── Ready! ────────────────────────────────────────────</span>
+    digitalWrite(PIN_LED, HIGH);
+    delay(<span class="number">500</span>);
+    digitalWrite(PIN_LED, LOW);
+    Serial.println(<span class="string">"═══ IoT Car Ready! ═══\n"</span>);
+}
+
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">//  MAIN LOOP</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="keyword">void</span> <span class="function">loop</span>() {
+    webSocket.loop();
+    mqttClient.loop();
+
+    <span class="comment">// Reconnect MQTT if needed</span>
+    <span class="keyword">if</span> (!mqttClient.connected()) {
+        reconnectMQTT();
+    }
+
+    <span class="keyword">unsigned long</span> now = millis();
+
+    <span class="comment">// ── Read sensors at 50Hz ──────────────────────────────</span>
+    <span class="keyword">if</span> (now - lastSensorRead >= SENSOR_READ_INTERVAL_MS) {
+        lastSensorRead = now;
+        readMPU6050();
+        readGPS();
+
+        <span class="comment">// ── Local crash detection ─────────────────────────</span>
+        <span class="keyword">if</span> (currentG > CRASH_G_THRESHOLD &amp;&amp;
+            (now - lastCrashTime) > CRASH_COOLDOWN_MS) {
+            lastCrashTime = now;
+            triggerCrashAlarm();
+            sendTelemetry(<span class="string">"crash"</span>);  <span class="comment">// Immediate crash event</span>
+        }
+        <span class="keyword">else if</span> (currentG > HARD_BRAKE_G_THRESHOLD &amp;&amp;
+                 (now - lastCrashTime) > CRASH_COOLDOWN_MS) {
+            lastCrashTime = now;
+            sendTelemetry(<span class="string">"hard_brake"</span>);
+        }
+    }
+
+    <span class="comment">// ── Send normal telemetry at regular interval ────────</span>
+    <span class="keyword">if</span> (now - lastTelemetry >= TELEMETRY_INTERVAL_MS) {
+        lastTelemetry = now;
+        sendTelemetry(<span class="string">"normal"</span>);
+    }
+
+    <span class="comment">// ── Turn off buzzer after duration ────────────────────</span>
+    <span class="keyword">if</span> (buzzerOffTime > <span class="number">0</span> &amp;&amp; now > buzzerOffTime) {
+        digitalWrite(PIN_BUZZER, LOW);
+        digitalWrite(PIN_LED, LOW);
+        buzzerOffTime = <span class="number">0</span>;
+    }
+}</pre>
+
+    <div class="alert alert-success">
+        <span class="alert-icon">📤</span>
+        <div><strong>To flash:</strong> Open <code>firmware.ino</code> in Arduino IDE → Select board "ESP32 Dev Module" → Select COM port → Click Upload (→ arrow button). Hold the BOOT button on ESP32 if upload fails.</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 9: ARCHITECTURE ═══════════════════════ -->
+<div class="page page-break" id="section-9">
+    <h1><span class="section-number">9</span> System Architecture & Data Flow</h1>
+    <p class="subtitle">How the IoT car connects to the existing Segura SOS pipeline.</p>
+
+    <h2>Complete Data Flow</h2>
+    <div class="flow-diagram">
+<span style="color:#ff3366">🚗 ESP32 TOY CAR</span> (MPU6050 reads at 50Hz, GPS at 1Hz)
+    │
+    │  Every 500ms: WebSocket JSON
+    │  ┌──────────────────────────────────────────────────┐
+    │  │ { "event_id": "iot-12345-1",                     │
+    │  │   "type": "normal | hard_brake | crash",         │
+    │  │   "gps": {"lat": 26.2183, "lng": 78.1828},      │
+    │  │   "speed_kmh": 15.3,                             │
+    │  │   "impact_g": 1.2,                               │
+    │  │   "source": "iot",                               │
+    │  │   "raw_accel": {"x": 0.1, "y": -0.3, "z": 1.0}} │
+    │  └──────────────────────────────────────────────────┘
+    ▼
+<span style="color:#6c5ce7">ws://LAPTOP_IP:8000/ws</span> ───────► <span style="color:#00cec9">M2 AI Engine (FastAPI)</span>
+                                    │
+                                    ├─ SeverityClassifier → minor|moderate|severe
+                                    ├─ RiskEngine → score 0-1, label
+                                    ├─ HazardZoneEngine → nearest hazard
+                                    │
+                                    ├─ WebSocket broadcast → all clients
+                                    │     ├── M4 React App (live map pins)
+                                    │     └── ESP32 (receives analysis result)
+                                    │
+                                    └─ if severe/moderate:
+                                         POST → <span style="color:#ff9800">M3 SOS Server (:4000)</span>
+                                                  │
+                                                  ├─ Store SOS event
+                                                  ├─ WebSocket → M4 (red pin)
+                                                  └─ Twilio → Emergency Call 📞</div>
+
+    <h2>What Changes vs. Original System</h2>
+    <table class="pin-table">
+        <tr>
+            <th>Component</th>
+            <th>Before (Phone/Browser)</th>
+            <th>After (IoT Car)</th>
+        </tr>
+        <tr>
+            <td><strong>Sensor Source</strong></td>
+            <td>Phone browser APIs (DeviceMotion, Geolocation)</td>
+            <td>ESP32 + MPU6050 + NEO-6M GPS</td>
+        </tr>
+        <tr>
+            <td><strong>Data Transport</strong></td>
+            <td>Browser WebSocket via HTTPS proxy</td>
+            <td>Direct Wi-Fi WebSocket + MQTT backup</td>
+        </tr>
+        <tr>
+            <td><strong>M2 AI Engine</strong></td>
+            <td>No changes needed</td>
+            <td>Receives same JSON schema, works as-is</td>
+        </tr>
+        <tr>
+            <td><strong>M3 SOS Server</strong></td>
+            <td>No changes</td>
+            <td>No changes</td>
+        </tr>
+        <tr>
+            <td><strong>M4 Community App</strong></td>
+            <td>No changes</td>
+            <td>No changes — shows IoT car on map</td>
+        </tr>
+        <tr>
+            <td><strong>Crash Detection</strong></td>
+            <td>Phone shake → browser event</td>
+            <td>Car hits wall → MPU6050 spike → auto SOS</td>
+        </tr>
+    </table>
+
+    <div class="alert alert-success">
+        <span class="alert-icon">🎯</span>
+        <div><strong>Key Advantage:</strong> The ESP32 sends data in the <em>exact same JSON format</em> as the old M1 browser simulator. M2, M3, and M4 don't know or care that the data is coming from a toy car instead of a phone — they just work!</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 10: SOFTWARE ═══════════════════════ -->
+<div class="page page-break" id="section-10">
+    <h1><span class="section-number">10</span> Software Backend Changes</h1>
+    <p class="subtitle">Minimal changes needed to the existing codebase.</p>
+
+    <h2>M2 AI Engine — schemas.py</h2>
+    <p>Add an optional <code>raw_accel</code> field to accept richer telemetry from ESP32:</p>
+
+    <div class="code-filename">schemas.py — Add RawAccel model</div>
+<pre><span class="comment"># Add this class before SensorEvent:</span>
+
+<span class="keyword">class</span> <span class="type">RawAccel</span>(<span class="type">BaseModel</span>):
+    x: <span class="type">float</span> = <span class="number">0.0</span>
+    y: <span class="type">float</span> = <span class="number">0.0</span>
+    z: <span class="type">float</span> = <span class="number">0.0</span>
+
+
+<span class="keyword">class</span> <span class="type">SensorEvent</span>(<span class="type">BaseModel</span>):
+    event_id: <span class="type">str</span>
+    timestamp: <span class="type">str</span>
+    type: <span class="type">str</span> = <span class="string">"crash"</span>
+    gps: <span class="type">GPSData</span> = GPSData()
+    speed_kmh: <span class="type">float</span> = <span class="number">0.0</span>
+    impact_g: <span class="type">float</span> = <span class="number">1.0</span>
+    weather: <span class="type">str</span> = <span class="string">"clear"</span>
+    source: <span class="type">str</span> = <span class="string">"simulated"</span>   <span class="comment"># real | simulated | iot</span>
+    raw_accel: <span class="type">Optional</span>[<span class="type">RawAccel</span>] = <span class="keyword">None</span>  <span class="comment"># ← NEW: raw MPU6050 data</span></pre>
+
+    <h2>start_all.py — Update Launcher</h2>
+    <p>The existing launcher doesn't need to start M1 anymore. The ESP32 connects directly to M2 on its own. Just update the print messages:</p>
+
+    <div class="code-filename">start_all.py — Updated console output</div>
+<pre><span class="comment"># Replace the M1 launch block with an informational message:</span>
+
+print(<span class="string">'  M0 IoT Car        →  ESP32 connects to ws://\u003cthis-IP\u003e:8000/ws'</span>)
+print(<span class="string">'  M2 AI Engine      →  http://localhost:8000'</span>)
+print(<span class="string">'  M3 SOS Dashboard  →  http://localhost:4000'</span>)
+print(<span class="string">'  M4 Community App  →  http://localhost:5173'</span>)</pre>
+
+    <div class="alert alert-info">
+        <span class="alert-icon">💡</span>
+        <div><strong>No M0 bridge server needed!</strong> Since we're using a pre-built RC car (no remote driving from laptop), the ESP32 connects directly to M2 via WebSocket. The existing M2 WebSocket endpoint handles everything. The system is <em>simpler</em> than the original plan.</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 11: TESTING ═══════════════════════ -->
+<div class="page page-break" id="section-11">
+    <h1><span class="section-number">11</span> Testing & Demo Guide</h1>
+    <p class="subtitle">Step-by-step verification and live demo flow.</p>
+
+    <h2>Pre-Flight Checklist</h2>
+    <ul class="checklist">
+        <li>ESP32 firmware flashed and Serial Monitor shows "IoT Car Ready!"</li>
+        <li>Wi-Fi connected (Serial shows IP address)</li>
+        <li>MPU6050 initialized (no error blink)</li>
+        <li>GPS module has blinking LED (searching for satellites)</li>
+        <li>M2 AI Engine running on laptop (<code>python -m uvicorn main:app --port 8000</code>)</li>
+        <li>M3 SOS Server running (<code>node index.js</code>)</li>
+        <li>M4 Community App running (<code>npm run dev</code>)</li>
+        <li>Serial Monitor shows "[WS] Connected to M2!"</li>
+        <li>Power bank connected and ESP32 running untethered</li>
+    </ul>
+
+    <h2>Test 1 — Sensor Reading Verification</h2>
+    <div class="step">
+        <div class="step-num">T1</div>
+        <div class="step-content">
+            <h4>Check Serial Monitor</h4>
+            <p>Open Arduino IDE → Tools → Serial Monitor (baud: 115200). You should see lines like:<br>
+            <code>[WS] Sent: normal → GPS (G=1.02)</code> every 500ms. The G-force should hover around 1.0 when the car is stationary (that's Earth's gravity). Tilt the car — G-force changes. GPS shows "default" indoors.</p>
+        </div>
+    </div>
+
+    <h2>Test 2 — WebSocket Connection</h2>
+    <div class="step">
+        <div class="step-num">T2</div>
+        <div class="step-content">
+            <h4>Verify M2 Receives Data</h4>
+            <p>Check the M2 terminal — you should see log messages as sensor events arrive. Open <strong>http://localhost:8000/docs</strong> (Swagger UI) and check the <code>/health</code> endpoint returns <code>{"status": "ok"}</code>.</p>
+        </div>
+    </div>
+
+    <h2>Test 3 — Crash Detection</h2>
+    <div class="step">
+        <div class="step-num">T3</div>
+        <div class="step-content">
+            <h4>Simulate a Crash</h4>
+            <p><strong>Gently but firmly tap the car against a wall or hard surface.</strong> The MPU6050 will spike above 2.5g. You should see:
+            <br>① ESP32: Buzzer sounds, LED lights up, Serial shows "🚨 CRASH DETECTED!"
+            <br>② M2: Classifies as "severe" or "moderate"
+            <br>③ M3: Receives SOS, logs it, triggers Twilio call
+            <br>④ M4: Red pin appears on the map at the car's GPS location</p>
+        </div>
+    </div>
+
+    <h2>🎯 Live System Demo Flow (2 minutes)</h2>
+
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <h4>Show the Setup (30 sec)</h4>
+            <p>"This is a real IoT device — ESP32 microcontroller with an accelerometer and GPS mounted on an RC car. It connects to our AI engine via Wi-Fi WebSocket."</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <h4>Show Live Telemetry (20 sec)</h4>
+            <p>Point to the M2 terminal or M4 map showing normal events streaming in. "Right now the car is stationary — G-force is 1.0, speed is 0. The AI classifies this as minor risk."</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <h4>Drive the Car (30 sec)</h4>
+            <p>Use the RC remote to drive the car around. "Watch the telemetry update in real-time — speed changes, GPS coordinates update."</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+            <h4>💥 Crash! (30 sec)</h4>
+            <p>Drive the car into a wall or obstacle. "BOOM! The accelerometer detected a 3.5G impact spike. Watch what happens..."
+            <br>→ Buzzer sounds on the car
+            <br>→ M2 AI Engine: "SEVERE crash detected"
+            <br>→ M3 SOS: Alert logged + emergency call dispatched
+            <br>→ M4 Map: Red SOS pin appears at the crash location</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+            <h4>Explain the Impact (10 sec)</h4>
+            <p>"In a real scenario, this triggers an automatic emergency call to 112 with the exact GPS location. No human intervention needed. This is Segura SOS."</p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ SECTION 12: TROUBLESHOOTING ═══════════════════════ -->
+<div class="page page-break" id="section-12">
+    <h1><span class="section-number">12</span> Troubleshooting</h1>
+    <p class="subtitle">Common issues and how to fix them.</p>
+
+    <table class="pin-table">
+        <tr>
+            <th style="width: 30%;">Problem</th>
+            <th style="width: 30%;">Cause</th>
+            <th style="width: 40%;">Fix</th>
+        </tr>
+        <tr>
+            <td><strong>ESP32 LED blinks rapidly on boot</strong></td>
+            <td>MPU6050 not detected</td>
+            <td>Check I2C wiring: SDA→GPIO21, SCL→GPIO22. Verify 3.3V power. Try swapping SDA/SCL.</td>
+        </tr>
+        <tr>
+            <td><strong>Wi-Fi won't connect</strong></td>
+            <td>Wrong SSID/password or 5GHz network</td>
+            <td>ESP32 only supports 2.4GHz Wi-Fi. Double-check SSID and password in config.h. Use phone hotspot as fallback.</td>
+        </tr>
+        <tr>
+            <td><strong>WebSocket shows "Disconnected" loop</strong></td>
+            <td>M2 server not running or wrong IP</td>
+            <td>Start M2 first: <code>python -m uvicorn main:app --port 8000</code>. Verify SERVER_IP in config.h matches your laptop's IP (<code>ipconfig</code>).</td>
+        </tr>
+        <tr>
+            <td><strong>GPS always shows default coordinates</strong></td>
+            <td>No satellite fix (indoor)</td>
+            <td>GPS needs clear sky. Take the car outside. First fix takes 30–90 seconds (cold start). Check GPS module LED: blinking = searching, steady = fixed.</td>
+        </tr>
+        <tr>
+            <td><strong>G-force reads 0.0 or NaN</strong></td>
+            <td>MPU6050 I2C communication failure</td>
+            <td>Run I2C scanner sketch to verify device at address 0x68. Check wire connections. Try shorter jumper wires.</td>
+        </tr>
+        <tr>
+            <td><strong>False crash detections</strong></td>
+            <td>Vibration from car motors</td>
+            <td>Increase <code>CRASH_G_THRESHOLD</code> to 3.0 or higher. Mount MPU6050 on foam tape to dampen vibrations. Increase <code>CRASH_COOLDOWN_MS</code>.</td>
+        </tr>
+        <tr>
+            <td><strong>Upload fails — "Failed to connect"</strong></td>
+            <td>ESP32 not in flash mode</td>
+            <td>Hold BOOT button on ESP32, click Upload, release BOOT when "Connecting…" appears. Also try a different USB cable (must be data cable, not charge-only).</td>
+        </tr>
+        <tr>
+            <td><strong>M4 map doesn't show crash pin</strong></td>
+            <td>M3 WebSocket not connected to M4</td>
+            <td>Verify M3 is running on port 4000. Check browser console on M4 for WS errors.</td>
+        </tr>
+        <tr>
+            <td><strong>Buzzer doesn't sound</strong></td>
+            <td>Passive buzzer (needs PWM) or wiring</td>
+            <td>Use an <strong>active</strong> buzzer (has built-in oscillator). Check polarity: + to GPIO4, – to GND.</td>
+        </tr>
+        <tr>
+            <td><strong>ESP32 keeps restarting</strong></td>
+            <td>Power supply too weak</td>
+            <td>Use a power bank that outputs at least 1A. Don't power ESP32 from laptop USB during wireless operation — use dedicated power bank.</td>
+        </tr>
+    </table>
+
+    <h2>Useful Debug Commands</h2>
+
+    <h3>Find your laptop's LAN IP</h3>
+    <div class="code-filename">Command Prompt (Windows)</div>
+    <pre>ipconfig
+<span class="comment">Look for "IPv4 Address" under your Wi-Fi adapter (e.g., 192.168.1.100)</span></pre>
+
+    <h3>Test if M2 is reachable from ESP32's network</h3>
+    <div class="code-filename">From any device on the same Wi-Fi</div>
+    <pre>curl http://192.168.1.100:8000/health
+<span class="comment">Should return: {"status":"ok"}</span></pre>
+
+    <h3>I2C Scanner (paste into Arduino IDE to verify MPU6050)</h3>
+    <div class="code-filename">i2c_scanner.ino</div>
+<pre><span class="include">#include</span> <span class="string">&lt;Wire.h&gt;</span>
+
+<span class="keyword">void</span> <span class="function">setup</span>() {
+    Wire.begin(<span class="number">21</span>, <span class="number">22</span>);
+    Serial.begin(<span class="number">115200</span>);
+    Serial.println(<span class="string">"Scanning I2C..."</span>);
+
+    <span class="keyword">for</span> (<span class="keyword">byte</span> addr = <span class="number">1</span>; addr &lt; <span class="number">127</span>; addr++) {
+        Wire.beginTransmission(addr);
+        <span class="keyword">if</span> (Wire.endTransmission() == <span class="number">0</span>) {
+            Serial.printf(<span class="string">"Device at 0x%02X\n"</span>, addr);
+        }
+    }
+    Serial.println(<span class="string">"Done. MPU6050 should be at 0x68."</span>);
+}
+
+<span class="keyword">void</span> <span class="function">loop</span>() {}</pre>
+
+    <div class="alert alert-success" style="margin-top: 30px;">
+        <span class="alert-icon">🎉</span>
+        <div><strong>That's everything!</strong> You now have a complete IoT implementation guide. Flash the firmware, mount the hardware, start the servers, and crash the car. Happy hacking! 🚗💥🚨</div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align: center; padding: 40px 0 60px; color: var(--text-dim); font-size: 13px;">
+    <p>Made with ❤️ for public safety — <strong>Team Segura SOS</strong></p>
+    <p style="margin-top: 6px;">Segura SOS IoT Implementation Guide v1.0 · August 2026</p>
+</div>
+
+</div><!-- end container -->
+
+</body>
+</html>

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AccidentAI — Unified Command Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg-primary: #040814;
+      --bg-card: #080f1f;
+      --bg-card2: #0c1628;
+      --border: rgba(99,179,237,0.12);
+      --border-glow: rgba(99,179,237,0.35);
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --text-primary: #f0f6ff;
+      --text-muted: #6b8aad;
+      --glow-blue: 0 0 30px rgba(59,130,246,0.25);
+      --glow-purple: 0 0 30px rgba(139,92,246,0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated Background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 20%, rgba(59,130,246,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 80%, rgba(139,92,246,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Top Header ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(8,15,31,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: var(--glow-blue);
+    }
+    .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text span { color: var(--accent); }
+
+    .header-status {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .status-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .status-pill.online { border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.08); }
+    .status-pill.offline { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.08); }
+    .status-pill.checking { border-color: var(--warning); color: var(--warning); background: rgba(245,158,11,0.08); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+    .live-clock {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: var(--text-muted);
+    }
+
+    /* ── Tab Nav ── */
+    .tab-nav {
+      position: relative; z-index: 10;
+      display: flex; gap: 4px;
+      padding: 10px 28px 0;
+      background: rgba(8,15,31,0.9);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 10px 22px;
+      border-radius: 10px 10px 0 0;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--text-primary); background: rgba(59,130,246,0.08); }
+    .tab-btn.active {
+      color: var(--accent);
+      background: rgba(59,130,246,0.12);
+      border-color: var(--border-glow) var(--border-glow) transparent;
+    }
+    .tab-badge {
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 10px; font-weight: 700;
+      background: var(--accent); color: #fff;
+    }
+
+    /* ── Main Content ── */
+    main { position: relative; z-index: 1; padding: 24px 28px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── M1 Iframe Panel ── */
+    .iframe-wrapper {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--glow-blue);
+      height: calc(100vh - 140px);
+      position: relative;
+    }
+    .iframe-wrapper iframe {
+      width: 100%; height: 100%;
+      border: none;
+      background: var(--bg-card);
+    }
+    .iframe-offline {
+      display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      height: calc(100vh - 140px);
+      color: var(--text-muted); gap: 16px;
+      border: 1px dashed var(--border); border-radius: 16px;
+    }
+    .iframe-offline .big-icon { font-size: 64px; }
+    .iframe-offline h3 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .iframe-offline p { font-size: 14px; }
+
+    /* ── M2 AI Panel Grid ── */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    @media(max-width:900px){ .panel-grid{grid-template-columns:1fr 1fr;} }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      transition: border-color 0.3s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .stat-card:hover { border-color: var(--border-glow); transform: translateY(-2px); }
+    .stat-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .card-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .card-value {
+      font-size: 36px; font-weight: 800; letter-spacing: -1px;
+      line-height: 1;
+    }
+    .card-value.blue { color: var(--accent); }
+    .card-value.purple { color: var(--accent2); }
+    .card-value.cyan { color: var(--accent3); }
+    .card-value.green { color: var(--success); }
+    .card-value.red { color: var(--danger); }
+    .card-value.yellow { color: var(--warning); }
+    .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* Risk Gauge */
+    .risk-gauge-wrap { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+    .gauge-track {
+      flex: 1; height: 10px; border-radius: 999px;
+      background: rgba(255,255,255,0.06); overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .gauge-label { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; min-width:40px; text-align:right; }
+
+    /* Hazard Table */
+    .hazard-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .icon { font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 10px 14px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 12px 14px; font-size: 13px;
+      border-bottom: 1px solid rgba(99,179,237,0.06);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59,130,246,0.04); }
+
+    .risk-badge {
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .risk-badge.high { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .risk-badge.medium { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .risk-badge.low { background: rgba(16,185,129,0.15); color: var(--success); }
+
+    /* Risk Calculator */
+    .calc-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px;
+    }
+    .input-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .input-group label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .input-group input {
+      background: var(--bg-card2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      color: var(--text-primary); font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none; transition: border-color 0.2s;
+    }
+    .input-group input:focus { border-color: var(--accent); }
+
+    .calc-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 10px;
+      padding: 11px 28px; color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .calc-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .calc-btn:active { transform: translateY(0); }
+
+    .result-box {
+      display: none; margin-top: 16px;
+      background: var(--bg-card2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .result-box.show { display: block; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+    .result-row span:first-child { color: var(--text-muted); }
+    .result-row span:last-child { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    /* Events feed */
+    .events-feed {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px; margin-bottom: 20px;
+    }
+    .feed-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid rgba(99,179,237,0.06);
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .feed-icon.crash { background: rgba(239,68,68,0.15); }
+    .feed-icon.warn  { background: rgba(245,158,11,0.15); }
+    .feed-icon.ok    { background: rgba(16,185,129,0.15); }
+    .feed-text strong { font-size: 13px; font-weight: 600; display: block; margin-bottom: 3px; }
+    .feed-text small  { font-size: 12px; color: var(--text-muted); }
+
+    /* Spinner */
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid rgba(59,130,246,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg-primary);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 999; gap: 18px;
+      transition: opacity 0.5s;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-logo { font-size: 56px; }
+    .loading-text { font-size: 18px; font-weight: 700; }
+    .loading-sub { font-size: 13px; color: var(--text-muted); }
+    .progress-bar {
+      width: 280px; height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">🛰️</div>
+  <div class="loading-text">AccidentAI Unified Portal</div>
+  <div class="loading-sub" id="loadingStatus">Connecting to M1 & M2...</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div class="logo-text">Accident<span>AI</span> &nbsp;—&nbsp; Unified Command Portal</div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill checking" id="m1Pill">
+      <span class="status-dot"></span> M1 Sensor
+    </div>
+    <div class="status-pill checking" id="m2Pill">
+      <span class="status-dot"></span> M2 AI Engine
+    </div>
+    <div class="live-clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-m1" onclick="switchTab('m1')">
+    📡 M1 — Sensor Dashboard
+    <span class="tab-badge">LIVE</span>
+  </button>
+  <button class="tab-btn" id="tab-m2" onclick="switchTab('m2')">
+    🧠 M2 — AI Engine &amp; Risk
+    <span class="tab-badge" id="m2Badge">API</span>
+  </button>
+</div>
+
+<!-- Main Content -->
+<main>
+
+  <!-- ── M1 PANEL ── -->
+  <div class="tab-panel active" id="panel-m1">
+    <div id="iframeContainer">
+      <div class="iframe-wrapper">
+        <iframe id="m1Frame" src="http://127.0.0.1:8000" title="M1 Sensor Dashboard"
+          allow="autoplay; camera; microphone"
+          onload="onM1Load()" onerror="onM1Error()">
+        </iframe>
+      </div>
+    </div>
+    <div class="iframe-offline" id="m1Offline">
+      <div class="big-icon">📡</div>
+      <h3>M1 Sensor Engine Offline</h3>
+      <p>Start M1 with: <code style="color:var(--accent)">python main.py</code> from <code style="color:var(--accent)">m1_sensor_engine/</code></p>
+    </div>
+  </div>
+
+  <!-- ── M2 PANEL ── -->
+  <div class="tab-panel" id="panel-m2">
+
+    <!-- Status Cards -->
+    <div class="panel-grid">
+      <div class="stat-card">
+        <div class="card-label">🔥 Risk Score</div>
+        <div class="card-value blue" id="riskScoreVal">—</div>
+        <div class="card-sub">/ 100 — Real-time index</div>
+        <div class="risk-gauge-wrap">
+          <div class="gauge-track"><div class="gauge-fill" id="riskGauge" style="width:0%"></div></div>
+          <div class="gauge-label" id="riskGaugeLabel">—</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="card-label">🗺️ Hazard Zone</div>
+        <div class="card-value purple" id="hazardZoneVal">—</div>
+        <div class="card-sub" id="hazardZoneCount">Loading zones...</div>
+      </div>
+      <div class="stat-card">
+        <div class="card-label">🤖 M2 Engine</div>
+        <div class="card-value green" id="m2StatusVal">ONLINE</div>
+        <div class="card-sub">AI Risk Analysis Active</div>
+      </div>
+      <div class="stat-card">
+        <div class="card-label">⚡ Total Zones</div>
+        <div class="card-value cyan" id="totalZonesVal">—</div>
+        <div class="card-sub">Monitored hazard clusters</div>
+      </div>
+      <div class="stat-card">
+        <div class="card-label">🚨 High Risk Zones</div>
+        <div class="card-value red" id="highZonesVal">—</div>
+        <div class="card-sub">Critical crash clusters</div>
+      </div>
+      <div class="stat-card">
+        <div class="card-label">🌙 Time Risk Factor</div>
+        <div class="card-value" id="timeRiskVal" style="font-size:24px;">—</div>
+        <div class="card-sub" id="timeRiskSub">Calculating...</div>
+      </div>
+    </div>
+
+    <!-- Hazard Table -->
+    <div class="hazard-section">
+      <div class="section-title"><span class="icon">📍</span> Active Hazard Zones</div>
+      <table id="hazardTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Radius (km)</th>
+            <th>Crash Count</th>
+            <th>Risk Level</th>
+          </tr>
+        </thead>
+        <tbody id="hazardTableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">
+            <span class="spinner"></span> Loading hazard data...
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Risk Calculator -->
+    <div class="calc-section">
+      <div class="section-title"><span class="icon">🧮</span> Real-Time Risk Calculator</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Latitude</label>
+          <input type="number" id="calcLat" value="28.7041" step="0.0001"/>
+        </div>
+        <div class="input-group">
+          <label>Longitude</label>
+          <input type="number" id="calcLng" value="77.1025" step="0.0001"/>
+        </div>
+        <div class="input-group">
+          <label>Speed (km/h)</label>
+          <input type="number" id="calcSpeed" value="60" min="0" max="200"/>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button class="calc-btn" onclick="calculateRisk()">Calculate Risk</button>
+        </div>
+      </div>
+      <div class="result-box" id="resultBox">
+        <div class="result-row">
+          <span>Risk Score</span>
+          <span id="resScore" style="color:var(--accent)">—</span>
+        </div>
+        <div class="result-row">
+          <span>Hazard Zone</span>
+          <span id="resZone">—</span>
+        </div>
+        <div class="result-row">
+          <span>Risk Level</span>
+          <span id="resLevel">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-m2 -->
+
+</main>
+
+<script>
+  /* ── Clock ── */
+  function updateClock() {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN', {hour12: false});
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ── Tab Switch ── */
+  function switchTab(tab) {
+    ['m1','m2'].forEach(t => {
+      document.getElementById(`panel-${t}`).classList.toggle('active', t === tab);
+      document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    });
+  }
+
+  /* ── Loading Screen ── */
+  const overlay = document.getElementById('loadingOverlay');
+  const progress = document.getElementById('progressFill');
+  const loadStatus = document.getElementById('loadingStatus');
+
+  function fakeProgress() {
+    let pct = 0;
+    const steps = [
+      [500, 20, 'Initializing portal...'],
+      [900, 45, 'Connecting to M1 Sensor Engine...'],
+      [1400, 70, 'Connecting to M2 AI Engine...'],
+      [1900, 90, 'Loading hazard zones...'],
+      [2400, 100, 'All systems ready!']
+    ];
+    steps.forEach(([delay, val, msg]) => {
+      setTimeout(() => {
+        progress.style.width = val + '%';
+        loadStatus.textContent = msg;
+        if (val === 100) setTimeout(() => overlay.classList.add('hidden'), 400);
+      }, delay);
+    });
+  }
+  fakeProgress();
+
+  /* ── Check Module Health ── */
+  async function checkHealth() {
+    // M1
+    try {
+      const r = await fetch('/api/m1/health', {signal: AbortSignal.timeout(5000)});
+      const d = await r.json();
+      setModuleStatus('m1', d.status === 'online');
+    } catch { setModuleStatus('m1', false); }
+
+    // M2
+    try {
+      const r = await fetch('/api/m2/health', {signal: AbortSignal.timeout(5000)});
+      const d = await r.json();
+      setModuleStatus('m2', d.status === 'ok');
+    } catch { setModuleStatus('m2', false); }
+  }
+
+  function setModuleStatus(module, online) {
+    const pill = document.getElementById(`${module}Pill`);
+    if(pill) pill.className = `status-pill ${online ? 'online' : 'offline'}`;
+    
+    if (module === 'm1') {
+      const iframe = document.getElementById('iframeContainer');
+      const offlineMsg = document.getElementById('m1Offline');
+      if (!online) {
+        if(iframe) iframe.style.display = 'none';
+        if(offlineMsg) offlineMsg.style.display = 'flex';
+      } else {
+        if(iframe) iframe.style.display = 'block';
+        if(offlineMsg) offlineMsg.style.display = 'none';
+      }
+    }
+    if (module === 'm2') {
+      const val = document.getElementById('m2StatusVal');
+      if(val) {
+        val.textContent = online ? 'ONLINE' : 'OFFLINE';
+        val.className = `card-value ${online ? 'green' : 'red'}`;
+      }
+    }
+  }
+
+  /* ── Hazard Zones ── */
+  async function loadHazards() {
+    try {
+      const r = await fetch('/api/m2/hazards');
+      const d = await r.json();
+      const zones = d.data || [];
+      const total = zones.length;
+      const high = zones.filter(z => z.risk_level === 'high').length;
+
+      document.getElementById('totalZonesVal').textContent = total;
+      document.getElementById('highZonesVal').textContent = high;
+      document.getElementById('hazardZoneCount').textContent = `${total} monitored cluster(s)`;
+
+      // Top zone risk
+      const topZone = zones.find(z => z.risk_level === 'high') || zones[0];
+      if (topZone) {
+        document.getElementById('hazardZoneVal').textContent = topZone.risk_level.toUpperCase();
+        document.getElementById('hazardZoneVal').className = `card-value ${topZone.risk_level === 'high' ? 'red' : topZone.risk_level === 'medium' ? 'yellow' : 'green'}`;
+      }
+
+      // Render table
+      const tbody = document.getElementById('hazardTableBody');
+      if (zones.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No hazard zones recorded yet</td></tr>';
+      } else {
+        tbody.innerHTML = zones.map((z, i) => `
+          <tr>
+            <td style="color:var(--text-muted)">${i + 1}</td>
+            <td>${z.lat.toFixed(5)}</td>
+            <td>${z.lng.toFixed(5)}</td>
+            <td>${z.radius_km}</td>
+            <td>${z.crash_count}</td>
+            <td><span class="risk-badge ${z.risk_level}">${z.risk_level.toUpperCase()}</span></td>
+          </tr>`).join('');
+      }
+    } catch (e) {
+      document.getElementById('hazardTableBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:20px;">M2 Engine offline — start it first</td></tr>';
+    }
+  }
+
+  /* ── Default Risk Score ── */
+  async function loadDefaultRisk() {
+    try {
+      const r = await fetch('/api/m2/risk-score?lat=28.7041&lng=77.1025&speed=60');
+      const d = await r.json();
+      document.getElementById('riskScoreVal').textContent = d.risk_score ?? '—';
+      document.getElementById('riskGauge').style.width = (d.risk_score ?? 0) + '%';
+      document.getElementById('riskGaugeLabel').textContent = d.risk_score ?? '—';
+    } catch (e) {}
+
+    // Time risk factor
+    const h = new Date().getHours();
+    const isNight = h >= 22 || h <= 6;
+    document.getElementById('timeRiskVal').textContent = isNight ? '🌙 NIGHT' : '☀️ DAY';
+    document.getElementById('timeRiskSub').textContent = isNight ? 'High risk — +25 score penalty' : 'Normal visibility — low penalty';
+  }
+
+  /* ── Risk Calculator ── */
+  async function calculateRisk() {
+    const lat = document.getElementById('calcLat').value;
+    const lng = document.getElementById('calcLng').value;
+    const speed = document.getElementById('calcSpeed').value;
+    const box = document.getElementById('resultBox');
+    box.classList.remove('show');
+
+    try {
+      const r = await fetch(`/api/m2/risk-score?lat=${lat}&lng=${lng}&speed=${speed}`);
+      const d = await r.json();
+      document.getElementById('resScore').textContent = d.risk_score;
+      document.getElementById('resZone').textContent = (d.hazard_zone || '—').toUpperCase();
+
+      const lvl = d.risk_level || (d.risk_score >= 75 ? 'HIGH' : d.risk_score >= 40 ? 'MEDIUM' : 'LOW');
+      const color = lvl === 'high' || lvl === 'HIGH' ? 'var(--danger)' : lvl === 'medium' || lvl === 'MEDIUM' ? 'var(--warning)' : 'var(--success)';
+      document.getElementById('resLevel').innerHTML = `<span style="color:${color};font-weight:800">${lvl}</span>`;
+
+      // Update gauge
+      document.getElementById('riskScoreVal').textContent = d.risk_score;
+      document.getElementById('riskGauge').style.width = d.risk_score + '%';
+      document.getElementById('riskGaugeLabel').textContent = d.risk_score;
+
+      box.classList.add('show');
+    } catch (e) {
+      alert('M2 Engine is offline. Please start it first.');
+    }
+  }
+
+  /* ── M1 iframe events ── */
+  function onM1Load() { setModuleStatus('m1', true); }
+  function onM1Error() { setModuleStatus('m1', false); }
+
+  /* ── Init ── */
+  setTimeout(() => {
+    checkHealth();
+    loadHazards();
+    loadDefaultRisk();
+    setInterval(checkHealth, 10000);
+    setInterval(loadHazards, 15000);
+    setInterval(loadDefaultRisk, 20000);
+  }, 2600);
+</script>
+</body>
+</html>
