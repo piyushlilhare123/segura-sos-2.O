@@ -142,14 +142,15 @@ function renderHttpsBanner() {
         banner.classList.remove('hidden');
     } else {
         // Served securely — show mobile URL if on desktop
-        const lanUrl = `https://${location.hostname}:${location.port || 8443}`;
+        const isLocalHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const mobileUrl = isLocalHost ? `https://${location.hostname}:${location.port || 8443}` : location.origin;
         if (!IS_MOBILE) {
             banner.innerHTML = `
                 <div class="https-banner-icon">✅</div>
                 <div class="https-banner-body">
                     <strong>HTTPS · Sensors unlocked</strong>
-                    <span>📱 Open on your phone: <a href="${lanUrl}" target="_blank">${lanUrl}</a>
-                    (accept the self-signed cert once → Advanced → Proceed)</span>
+                    <span>📱 Open on your phone: <a href="${mobileUrl}" target="_blank">${mobileUrl}</a>
+                    ${isLocalHost ? "(accept the self-signed cert once → Advanced → Proceed)" : "(open in your phone browser to stream sensors)"}</span>
                 </div>`;
             banner.className = 'https-banner ok';
             banner.classList.remove('hidden');
