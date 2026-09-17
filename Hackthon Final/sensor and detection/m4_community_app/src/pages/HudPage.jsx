@@ -1,7 +1,8 @@
+import { M2_HTTP_URL } from '../config.js';
 import React, { useState, useEffect, useRef } from 'react';
 
-const M2_RISK_URL   = (lat, lng) => `http://localhost:8000/risk?lat=${lat}&lng=${lng}`;
-const M2_HAZARD_URL = (lat, lng) => `http://localhost:8000/hazards?lat=${lat}&lng=${lng}&radius=5000`;
+const M2_RISK_URL   = (lat, lng) => `${M2_HTTP_URL}/risk?lat=${lat}&lng=${lng}`;
+const M2_HAZARD_URL = (lat, lng) => `${M2_HTTP_URL}/hazards?lat=${lat}&lng=${lng}&radius=5000`;
 
 const RISK_COLORS = {
   low:      '#10b981',

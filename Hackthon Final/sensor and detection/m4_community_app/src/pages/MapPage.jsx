@@ -1,3 +1,4 @@
+import { M2_WS_URL, M2_HTTP_URL, M3_HTTP_URL, M3_WS_URL } from '../config.js';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -85,10 +86,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const M2_WS_URL      = 'ws://localhost:8000/ws';
-const M2_HAZARDS_URL = (lat, lng, r) => `http://localhost:8000/hazards?lat=${lat}&lng=${lng}&radius=${r}`;
-const M3_INCIDENTS   = 'http://localhost:4000/incidents';
-const M3_WS_URL      = 'ws://localhost:4000';
+// const M2_WS_URL handled by config.js
+const M2_HAZARDS_URL = (lat, lng, r) => `${M2_HTTP_URL}/hazards?lat=${lat}&lng=${lng}&radius=${r}`;
+const M3_INCIDENTS   = `${M3_HTTP_URL}/incidents`;
+// const M3_WS_URL handled by config.js
 
 function createIcon(color) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="42" viewBox="0 0 25 41">

@@ -1,3 +1,4 @@
+import { M3_HTTP_URL } from './config.js';
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import MapPage from './pages/MapPage.jsx';
@@ -71,7 +72,7 @@ function FloatingSOS() {
   const dispatchSOS = async () => {
     setIsSending(true);
     try {
-      const m3Url = import.meta.env.VITE_M3_URL || 'http://localhost:4000';
+      const m3Url = M3_HTTP_URL;
       await fetch(`${m3Url}/demo/trigger-sos`, { method: 'POST' });
     } catch(err) {
       console.error('Manual SOS dispatch warning:', err);

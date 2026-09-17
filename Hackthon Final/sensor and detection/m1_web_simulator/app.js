@@ -199,7 +199,8 @@ function connectWS() {
     // Always connect through the proxy on the same origin — no mixed content.
     // Proxy: wss://<host>:<port>/proxy/ws  →  ws://localhost:8000/ws (M2)
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl  = `${scheme}://${location.host}/proxy/ws`;
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const wsUrl  = isLocal ? `${scheme}://${location.host}/proxy/ws` : 'wss://segura-m2-ai-engine.onrender.com/ws';
     console.log(`WS connecting -> ${wsUrl}`);
 
     ws = new WebSocket(wsUrl);
@@ -327,7 +328,8 @@ async function dispatchSOS(ev, severity) {
         source:    ev.source,
         accident_photo: ev.accident_photo || ''
     };
-    const proxyUrl = `${location.origin}/proxy/sos`;
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const proxyUrl = isLocal ? `${location.origin}/proxy/sos` : 'https://segura-m3-sos-server.onrender.com/sos';
     try {
         const res = await fetch(proxyUrl, {
             method:  'POST',

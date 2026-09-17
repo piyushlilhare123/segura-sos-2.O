@@ -1,7 +1,8 @@
+import { M3_HTTP_URL } from '../config.js';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const M3_INCIDENT_URL = 'http://localhost:4000/incident';
+const M3_INCIDENT_URL = `${M3_HTTP_URL}/incident`;
 
 export default function ReportPage() {
   const navigate = useNavigate();
