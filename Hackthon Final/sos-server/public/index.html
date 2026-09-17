@@ -782,7 +782,7 @@
         <h3>🔗 Network Utilities</h3>
         <div class="links-row">
           <a href="https://segura-m2-ai-engine.onrender.com/docs" target="_blank" class="link-btn">📖 M2 Swagger API</a>
-          <a href="https://segura-m4-community.vercel.app" target="_blank" class="link-btn">🗺 M4 Live Tracker</a>
+          <a href="https://segura-m4-community-app.vercel.app" target="_blank" class="link-btn">🗺 M4 Live Tracker</a>
           <a href="/sos-logs" target="_blank" class="link-btn">📋 Inspect JSON Logs</a>
           <a href="/health" target="_blank" class="link-btn">💚 M3 Health</a>
         </div>
@@ -808,14 +808,12 @@
   // ── Health checks ─────────────────────────────────────────────
   async function checkHealth(url, dotId, valId, cardId, label) {
     try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
-      if (r.ok) {
-        document.getElementById(dotId).className = 'dot dot-green';
-        document.getElementById(valId).textContent = 'Online ✓';
-        document.getElementById(valId).style.color = 'var(--green)';
-        document.getElementById(cardId).classList.add('online');
-        document.getElementById(cardId).classList.remove('offline');
-      } else { throw new Error(); }
+      const r = await fetch(url, { mode: 'no-cors', signal: AbortSignal.timeout(6000) });
+      document.getElementById(dotId).className = 'dot dot-green';
+      document.getElementById(valId).textContent = 'Online ✓';
+      document.getElementById(valId).style.color = 'var(--green)';
+      document.getElementById(cardId).classList.add('online');
+      document.getElementById(cardId).classList.remove('offline');
     } catch {
       document.getElementById(dotId).className = 'dot dot-red';
       document.getElementById(valId).textContent = 'Offline ✗';
@@ -827,7 +825,7 @@
 
   const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   const M2_URL   = IS_LOCAL ? 'http://localhost:8000' : 'https://segura-m2-ai-engine.onrender.com';
-  const M4_URL   = IS_LOCAL ? 'http://localhost:5173' : 'https://segura-m4-community.vercel.app';
+  const M4_URL   = IS_LOCAL ? 'http://localhost:5173' : 'https://segura-m4-community-app.vercel.app';
 
   function runHealthChecks() {
     checkHealth(M2_URL + '/health', 'dot-m2', 'val-m2', 'card-m2', 'M2');
