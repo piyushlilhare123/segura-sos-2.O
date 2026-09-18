@@ -2,27 +2,20 @@
     <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&height=331&section=header&text=%F0%9F%9A%A8%20SEGURA%20SOS&textBg=false&fontColor=black&fontSize=70&animation=fadeIn&fontAlign=47&desc=Real-Time%20Crash%20Detection%20and%20Emergency%20Dispatch!&descSize=31&descAlign=51&descAlignY=65&strokeWidth=5"/>
 </p>
 
+<p align="center">
+  <i><b>"Saving Lives in the Golden Hour Through Autonomous Crash Intelligence"</b></i>
+</p>
 
-<br />
+<p align="center">
+  An intelligent, end-to-end telemetry pipeline combining on-device sensor fusion, neural severity classification, automated telecom dispatch, and hyper-local community situational awareness.
+</p>
 
-```
-  ███████╗███████╗ ██████╗ ██╗   ██╗██████╗  █████╗     ███████╗ ██████╗ ███████╗
-  ██╔════╝██╔════╝██╔════╝ ██║   ██║██╔══██╗██╔══██╗    ██╔════╝██╔═══██╗██╔════╝
-  ███████╗█████╗  ██║  ███╗██║   ██║██████╔╝███████║    ███████╗██║   ██║███████╗
-  ╚════██║██╔══╝  ██║   ██║██║   ██║██╔══██╗██╔══██║    ╚════██║██║   ██║╚════██║
-  ███████║███████╗╚██████╔╝╚██████╔╝██║  ██║██║  ██║    ███████║╚██████╔╝███████║
-  ╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝    ╚══════╝ ╚═════╝ ╚══════╝
-```
-
-### *"Saving Lives in the Golden Hour Through Autonomous Crash Intelligence"*
-
-**An intelligent, end-to-end telemetry pipeline combining on-device sensor fusion, neural severity classification, automated telecom dispatch, and hyper-local community situational awareness.**
-
-[🌐 Explore Live Deployment](#-live-cloud-deployments) • [⚡ Quick Local Setup](#-run-locally-on-your-laptop-in-5-minutes) • [🧠 System Architecture](#-system-architecture--3d-data-pipeline) • [📱 Real World Impact](#-why-segura-sos-real-world-impact)
-
----
-
-</div>
+<p align="center">
+  🌐 <a href="https://github.com/piyushlilhare123/segura-sos-2.O#-live-cloud-deployments">Explore Live Deployment</a> •
+  ⚡ <a href="https://github.com/piyushlilhare123/segura-sos-2.O#-run-locally-on-your-laptop-in-5-minutes">Quick Local Setup</a> •
+  🧠 <a href="https://github.com/piyushlilhare123/segura-sos-2.O#-system-architecture--3d-data-pipeline">System Architecture</a> •
+  📱 <a href="https://github.com/piyushlilhare123/segura-sos-2.O#-why-segura-sos-real-world-impact">Real World Impact</a>
+</p>
 
 ## 🌐 Live Cloud Deployments
 
