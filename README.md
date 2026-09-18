@@ -1,7 +1,6 @@
-<div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=rect&height=331&color=gradient&text=🚨%20SEGURA%20SOS&textBg=false&fontColor=black&fontSize=70&animation=fadeIn&fontAlign=47&desc=Real-Time%20Crash%20Detection%20%26%20Emergency%20Dispatch&descSize=31&descAlign=51&descAlignY=65&strokeWidth=5" />
-</div>
-
+<p align='center'>
+    <img src="https://capsule-render.vercel.app/api?type=waving&color=auto&height=300&section=header&text=capsule%20render&fontSize=90&animation=fadeIn&fontAlignY=38&desc=Decorate%20GitHub%20Profile%20or%20any%20Repo%20like%20me!&descAlignY=51&descAlign=62"/>
+</p>
 [![Render Deployment](https://img.shields.io/badge/Render-M2%20%26%20M3%20Live-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://segura-m3-sos-server.onrender.com)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-M1%20%26%20M4%20Live-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://segura-m4-community-app.vercel.app)
 [![Python](https://img.shields.io/badge/Python-3.10%2B%20%7C%20FastAPI-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://fastapi.tiangolo.com)
