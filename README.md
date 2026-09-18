@@ -1,10 +1,8 @@
 <p align='center'>
-    <img src="https://capsule-render.vercel.app/api?type=waving&color=auto&height=300&section=header&text=capsule%20render&fontSize=90&animation=fadeIn&fontAlignY=38&desc=Decorate%20GitHub%20Profile%20or%20any%20Repo%20like%20me!&descAlignY=51&descAlign=62"/>
+    <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&height=331&section=header&text=%F0%9F%9A%A8%20SEGURA%20SOS&textBg=false&fontColor=black&fontSize=70&animation=fadeIn&fontAlign=47&desc=Real-Time%20Crash%20Detection%20and%20Emergency%20Dispatch!&descSize=31&descAlign=51&descAlignY=65&strokeWidth=5"/>
 </p>
 
-<p align='center'>
-    <img src="https://capsule-render.vercel.app/api?type=rect&height=331&color=gradient&text=🚨%20SEGURA%20SOS&textBg=false&fontColor=black&fontSize=70&animation=fadeIn&fontAlign=47&desc=Real-Time%20Crash%20Detection%20%26%20Emergency%20Dispatch&descSize=31&descAlign=51&descAlignY=65&strokeWidth=5"/>
-</p>
+
 <br />
 
 ```
