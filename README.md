@@ -1,4 +1,4 @@
-# 🚨 SEGURA SOS — Real-Time Accident Detection & Emergency Response System (ADRS)
+https://capsule-render.vercel.app/api?type=rect&height=331&color=gradient&text=🚨%20SEGURA%20SOS&textBg=false&fontColor=black&fontSize=70&animation=fadeIn&fontAlign=50&desc="Real-Time%20Crash%20Detection%20%anand%20Emergency%20Dispatch"&descSize=31&descAlign=55&descAlignY=65&strokeWidth=5
 
 <div align="center">
 
